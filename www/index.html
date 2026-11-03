@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KAM Éducateur — Version 3.0 hors connexion</title>
+<style>
+:root{--blue:#293b91;--blue2:#3b4aa7;--bg:#f7f8fc;--ink:#1c2442;--muted:#697083;--line:#d9dce8;--pale:#e7e9f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{background:var(--blue);color:white;min-height:86px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{font-size:27px;font-weight:400;letter-spacing:.2px}
+.menu{font-size:28px;line-height:1;background:none;color:white;border:0;width:auto;margin:0;padding:0;cursor:pointer}
+main{max-width:850px;margin:22px auto;padding:0 18px 40px}
+.hero{background:linear-gradient(115deg,#293b91,#3b4aa7);color:white;border-radius:28px;padding:28px 24px;display:flex;gap:20px;align-items:center;min-height:180px}
+.hero-icon{font-size:44px;flex-shrink:0}
+h1{font-size:30px;margin:0 0 12px}
+.hero p{margin:0;color:#e0e4ff;font-size:18px;line-height:1.45}
+.section-head{display:flex;align-items:center;gap:12px;margin:28px 0 24px}
+.section-head h2{font-size:27px;margin:0}
+.pager{margin-left:auto;display:flex;align-items:center;gap:12px}
+.count{background:#e6e8f4;border-radius:30px;padding:14px 18px;font-size:20px;font-weight:bold;color:#34438e;white-space:nowrap}
+.arrow{width:62px;height:62px;border:0;border-radius:50%;background:#e1e2e7;color:#8c91a0;font-size:30px;cursor:pointer}
+.arrow.active{background:#e2e3fb;color:#293b91}
+.domain{border:3px solid var(--blue);border-radius:34px;padding:24px 26px;background:#dfe2f4;box-shadow:0 8px 18px #1c24420b}
+.domain-row{display:flex;align-items:center;gap:22px}
+.domain-icon{width:90px;height:90px;border-radius:24px;background:var(--blue);color:white;display:grid;place-items:center;font-size:38px;flex-shrink:0}
+.domain-title{font-size:29px;font-weight:700;margin-bottom:10px}
+.domain-desc{font-size:18px;line-height:1.45;color:#636b7b}
+.toggle{margin-top:18px;color:#293b91;font-weight:700;font-size:17px;cursor:pointer;display:inline-block}
+.tools{background:white;border:1px solid var(--line);border-radius:32px;margin-top:30px;padding:26px;box-shadow:0 8px 22px #17254b0a}
+.tools-top{display:flex;align-items:center;gap:18px}
+.small-icon{width:72px;height:72px;background:#e8eaf6;border-radius:22px;display:grid;place-items:center;font-size:32px;color:var(--blue);flex-shrink:0}
+.tools-title{font-size:27px;font-weight:700;margin-bottom:7px}
+.tools-desc{font-size:18px;color:#697083;line-height:1.4}
+.close{margin-left:auto;background:none;border:0;color:#535866;font-size:32px;cursor:pointer}
+.available{font-size:22px;font-weight:bold;margin:28px 0 24px;padding-left:16px;border-left:7px solid var(--blue)}
+.tool-item{display:flex;align-items:center;gap:18px;background:#f8f9fc;border-radius:24px;padding:22px;cursor:pointer;border:0;width:100%;text-align:left;color:inherit}
+.tool-item .label{font-size:25px;font-weight:700;margin-bottom:8px}
+.tool-item .desc{font-size:18px;color:#697083;line-height:1.4}
+.chevron{margin-left:auto;font-size:34px;color:var(--blue)}
+.hidden{display:none}
+.admin-theme{--admin:#ed850b;--admin-pale:#fff0df}.admin-theme .domain{border-color:var(--admin);background:#fae8d5}.admin-theme .domain-icon{background:var(--admin)}.admin-theme .domain-title,.admin-theme .toggle{color:var(--admin)}.admin-theme .tools{border-color:#f1ddc6}.admin-theme .available{border-color:var(--admin)}.admin-theme .small-icon{background:#fcefe2;color:var(--admin)}.admin-tools{display:grid;gap:18px}.admin-panel{margin-top:18px;padding:18px;background:#f8f9fc;border-radius:18px;border:1px solid var(--line)}.admin-panel h3{margin-top:0}.admin-panel input[type=file]{display:block;margin:12px 0}.admin-panel .form-actions{margin-top:15px}
+.notice{margin-top:18px;color:#6c7283;font-size:13px;line-height:1.5}
+#studentModule,#dailyModule{max-width:850px}
+.tool-list{display:grid;gap:12px}
+.daily-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.daily-form-grid label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:15px}
+.daily-form-grid input,.daily-form-grid select,.daily-form-grid textarea{width:100%;min-width:0;padding:12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);font:inherit}
+.daily-form-grid textarea{min-height:92px;resize:vertical}
+.daily-record{background:#f8f9fc;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
+.daily-record strong{display:block;margin-bottom:5px}
+.absence-directory{margin-bottom:18px}
+.absence-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 28px}
+.absence-tab{min-height:58px;border:1.5px solid #888391;border-radius:36px;background:transparent;color:#555d82;font:inherit;font-size:17px;padding:12px 10px;cursor:pointer}
+.absence-tab:active,.absence-tab.active{background:#e8e9fb;border-color:#293b91;color:#293b91}
+.absence-search,.absence-class{width:100%;padding:18px 16px;border:1.5px solid #aaa6b4;border-radius:18px;background:transparent;color:var(--ink);font:inherit;font-size:17px;margin-bottom:14px}
+.absence-student-list{display:grid;gap:12px;margin-top:8px}
+.absence-student{display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:17px 16px;border:1px solid #e5e1ec;border-radius:22px;background:#f4f1f8;color:var(--ink);box-shadow:0 2px 3px #00000012;cursor:pointer}
+.absence-avatar{width:52px;height:52px;border-radius:50%;background:#e0e3ff;color:#35427e;display:grid;place-items:center;font-size:25px;flex-shrink:0}
+.absence-student-info{flex:1;min-width:0}.absence-student-info strong{display:block;font-size:18px;overflow-wrap:anywhere;margin-bottom:5px}.absence-student-info span{color:#606070;font-size:15px}.absence-chevron{font-size:28px;color:#4e4d58}
+.absence-back{border:0;background:transparent;color:#293b91;font:inherit;font-weight:bold;padding:8px 0;cursor:pointer;margin-bottom:12px}
+@media(max-width:520px){.absence-tabs{gap:8px}.absence-tab{font-size:15px}.absence-search,.absence-class{font-size:16px}}
+@media(max-width:520px){.daily-form-grid{grid-template-columns:1fr}}
+.form-heading{font-size:22px;font-weight:800;margin:28px 0 16px;padding-bottom:10px;border-bottom:2px solid var(--pale)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.form-grid label,.saved-section label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:15px}
+.form-grid input,.form-grid select,.saved-section input{width:100%;min-width:0;padding:12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);font:inherit}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.config-wide{display:flex;flex-direction:column;gap:8px;font-weight:700}.config-wide textarea{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;background:white;color:var(--ink);font:inherit;resize:vertical}
+.primary-btn,.secondary-btn{width:auto;padding:13px 17px;border:0;border-radius:12px;font-weight:700;cursor:pointer}
+.primary-btn{background:var(--blue);color:white}.secondary-btn{background:#e8eaf6;color:var(--blue)}
+.saved-section{border-top:1px solid var(--line);margin-top:28px;padding-top:8px}
+.student-list{display:grid;gap:10px;margin-top:14px}
+.student-record{display:flex;align-items:center;gap:12px;justify-content:space-between;background:#f8f9fc;border:1px solid var(--line);border-radius:14px;padding:14px}
+.student-record strong{display:block;margin-bottom:4px}.record-actions{display:flex;gap:7px;flex-wrap:wrap}
+.record-actions button{width:auto;border:0;border-radius:8px;padding:8px 10px;cursor:pointer;background:#e8eaf6;color:var(--blue)}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr}.student-record{align-items:flex-start;flex-direction:column}.record-actions{width:100%}header{padding:22px 26px}.brand{font-size:25px}main{padding:0 28px 32px;margin-top:22px}.hero{padding:26px 20px;gap:16px}.hero-icon{font-size:38px}h1{font-size:27px}.hero p{font-size:17px}.section-head h2{font-size:25px}.pager{gap:8px}.count{font-size:17px;padding:13px 16px}.arrow{width:60px;height:60px}.domain{padding:26px 26px;border-radius:34px}.domain-row{gap:22px}.domain-icon{width:90px;height:90px}.domain-title{font-size:28px}.domain-desc{font-size:18px}.tools{padding:27px 26px}.tools-title{font-size:27px}.tools-desc{font-size:18px}.tool-item{padding:22px}.tool-item .label{font-size:24px}}
+
+.avisee-modal-backdrop.hidden,.avisee-empty.hidden{display:none!important}.avisee-page{position:relative;min-height:460px;padding:10px 0 95px}.avisee-empty{min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;font-size:18px;color:#34313d}.avisee-empty .big{font-size:76px;line-height:1}.avisee-add{position:absolute;right:0;bottom:0;border:0;border-radius:28px;background:#dfe2ff;color:#394575;padding:20px 28px;font-size:18px;box-shadow:0 7px 14px #0002;cursor:pointer}.avisee-record{background:#f3f1f8;border-radius:18px;padding:16px;margin:12px 0;display:flex;justify-content:space-between;gap:12px}.avisee-modal-backdrop{position:fixed;inset:0;background:#0008;z-index:999;display:flex;align-items:center;justify-content:center;padding:18px}.avisee-modal{background:#eeedf5;border-radius:38px;padding:26px 22px;width:min(100%,550px);max-height:90vh;overflow:auto;box-shadow:0 12px 35px #0003}.avisee-modal h2{font-size:27px;font-weight:500;margin:0 0 28px}.avisee-modal label{display:block;margin:0 0 16px;font-size:15px;color:#50505c}.avisee-modal input,.avisee-modal textarea{display:block;width:100%;border:1.5px solid #85838f;border-radius:6px;background:transparent;padding:17px 14px;font:inherit;font-size:17px;color:#24232b;margin-top:8px}.avisee-modal textarea{height:120px;resize:vertical}.avisee-modal .modal-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:28px}.avisee-modal button{border:0;border-radius:24px;padding:13px 22px;font-size:16px;cursor:pointer}.avisee-modal .cancel{background:transparent;color:#535d8b}.avisee-modal .save{background:#555d98;color:white}.avisee-suggestions{display:none;max-height:150px;overflow:auto;border:1px solid #aaa;border-radius:8px;background:white}.avisee-suggestions button{display:block;width:100%;text-align:left;background:white;border-radius:0;padding:12px;color:#222}.avisee-suggestions button:hover{background:#e8e9ff}
+
+
+.incident-card{background:#f3f1f8;border:1px solid #e4e0eb;border-radius:22px;padding:18px;margin:16px 0;box-shadow:0 2px 3px #00000012}
+.incident-card h3{font-size:20px;margin:0 0 16px;font-weight:800}
+.incident-card p{font-size:15px;line-height:1.5;margin:8px 0 16px;color:#4f4e59}
+.incident-card label{display:flex;flex-direction:column;gap:8px;font-size:16px;margin:10px 0}
+.incident-card input[type=text],.incident-card input[type=date],.incident-card input[type=time],.incident-card textarea{width:100%;padding:16px;border:1.5px solid #85838f;border-radius:8px;background:transparent;color:#24232b;font:inherit;min-width:0}
+.incident-card textarea{min-height:105px;resize:vertical}
+.incident-options{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.incident-choice{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:8px!important;border:1.5px solid #c9c6d0;border-radius:14px;padding:10px 14px;margin:0!important;background:#faf9fd;cursor:pointer;font-size:15px!important}
+.incident-choice:has(input:checked){background:#e1e2fb;border-color:#d6d8f8;color:#444e83}
+.incident-choice input{width:18px;height:18px;accent-color:#555d98}
+.incident-savebar{position:sticky;bottom:0;background:#faf8ff;padding:14px 0 4px;z-index:3}
+.incident-savebar button{width:100%;border:0;border-radius:30px;background:#555d98;color:#fff;padding:18px;font-size:17px;font-weight:700}
+.incident-student-suggestions{background:white;border:1px solid #ccc;border-radius:8px;max-height:150px;overflow:auto}
+.incident-student-suggestions button{display:block;width:100%;text-align:left;padding:12px;border:0;background:white;color:#222}
+
+
+.analysis-panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;margin-top:18px}
+.analysis-panel h3{font-size:21px;margin:4px 0 16px}
+.analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.analysis-grid label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:14px}
+.analysis-grid input,.analysis-grid select{width:100%;min-width:0;padding:13px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);font:inherit}
+.analysis-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.analysis-stat{background:#f3f5fb;border-radius:14px;padding:14px;text-align:center}
+.analysis-stat strong{display:block;font-size:24px;color:var(--blue)}
+.analysis-stat span{font-size:13px;color:var(--muted)}
+.analysis-result{border:1px solid var(--line);background:#f8f9fc;border-radius:12px;padding:12px;margin:8px 0;overflow-wrap:anywhere}
+.filter-volet{display:flex;flex-direction:column;gap:8px;font-size:15px;font-weight:700;margin-bottom:22px}.filter-volet select,.filter-card select,.filter-card input{width:100%;min-width:0;padding:15px;border:1.5px solid #85838f;border-radius:9px;background:transparent;color:var(--ink);font:inherit}.filter-card{background:#f5f3f9;border:1px solid #e3e0e9;border-radius:20px;padding:16px;margin:16px 0}.filter-card>label,.filter-age label{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px;font-size:14px;font-weight:600;color:#5b5964}.filter-age{display:grid;grid-template-columns: minmax(100px,.6fr) minmax(0,1.4fr);gap:12px}.filter-reset,.filter-export{width:100%;border-radius:28px;padding:15px;margin:10px 0}.filter-total{background:#dfe2ff;color:#34417f;font-size:19px;font-weight:800;padding:22px;border-radius:16px;margin:22px 0}.filter-result-body{display:flex;flex-direction:column;gap:4px;min-width:0}.filter-avatar{width:54px;height:54px;flex:0 0 54px;border-radius:50%;background:#e1e3ff;color:#39447f;display:grid;place-items:center;font-size:22px;font-weight:800}.analysis-result{display:flex;align-items:flex-start;gap:14px;border:1px solid var(--line);background:#f8f7fb;border-radius:18px;padding:14px;margin:9px 0;overflow-wrap:anywhere}.analysis-result strong{font-size:17px}
+@media(max-width:520px){.analysis-grid{grid-template-columns:1fr}.analysis-stats{grid-template-columns:1fr 1fr}}
+
+
+.period-manager{margin-top:22px;padding:18px 0;border-top:1px solid var(--line)}
+.period-list{display:grid;gap:12px;margin:18px 0}.period-card{display:flex;align-items:center;gap:14px;background:#f4f1f8;border:1px solid #e2deea;border-radius:18px;padding:16px;box-shadow:0 2px 3px #00000012}.period-number{width:54px;height:54px;flex-shrink:0;border-radius:50%;background:#e1e2ff;color:#444e83;display:grid;place-items:center;font-size:23px;font-weight:700}.period-card strong{display:block;font-size:18px;margin-bottom:5px}.period-card span{color:#606070}.period-status{margin-left:auto;font-size:22px;color:#555d98}.period-card.active{border:2px solid #555d98;background:#eeedf9}.period-card.done{opacity:.82}.period-history-card{background:#f8f9fc;border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}.period-history-card h4{margin:0 0 8px;font-size:17px}.period-history-card p{margin:5px 0;color:#555d6d;font-size:14px;line-height:1.45}.period-history-card button{margin-top:8px}
+
+
+.settings-menu{display:grid;gap:18px;margin-top:28px}
+.settings-card{display:flex;align-items:center;gap:18px;width:100%;padding:18px 20px;border:1px solid #e3e0e9;border-radius:22px;background:#f4f1f8;color:#24232b;text-align:left;box-shadow:0 2px 4px #00000018;cursor:pointer;min-height:112px}
+.settings-icon{width:68px;height:68px;flex:0 0 68px;border-radius:50%;background:#e1e2ff;color:#394575;display:grid;place-items:center;font-size:30px}
+.settings-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:8px}.settings-copy strong{font-size:22px}.settings-copy small{font-size:17px;color:#606070;line-height:1.4}.settings-chevron{font-size:36px;color:#50505c;line-height:1}
+.settings-back{border:0;background:transparent;color:#343b75;font:inherit;font-size:18px;padding:8px 0 18px;cursor:pointer;font-weight:600}
+.settings-panel{padding-top:8px}.settings-save{padding-top:18px;border-top:1px solid var(--line);margin-top:26px}
+@media(max-width:520px){.settings-card{padding:17px 16px;gap:14px;min-height:108px}.settings-icon{width:58px;height:58px;flex-basis:58px}.settings-copy strong{font-size:20px}.settings-copy small{font-size:16px}}
+
+.admin-import-card{background:#f5f2fa;border:1px solid #e4deed;border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 2px 4px #00000012}.admin-import-card h3{margin-top:0}.admin-import-card select{width:100%;padding:14px;border:1px solid #888;border-radius:8px;background:transparent;font-size:1rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">KAM Éducateur</div>
+  <button class="menu" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+</header>
+<main>
+  <section class="hero">
+    <div class="hero-icon" aria-hidden="true">▦</div>
+    <div>
+      <h1>Tableau de bord</h1>
+      <p>Parcourez les domaines avec les flèches, puis touchez une carte pour afficher ses outils.</p>
+    </div>
+  </section>
+  <div class="section-head">
+    <h2>Domaines</h2>
+    <div class="pager">
+      <span class="count" id="count">1 / 5</span>
+      <button class="arrow" id="prev" aria-label="Domaine précédent" disabled>‹</button>
+      <button class="arrow active" id="next" aria-label="Domaine suivant">›</button>
+    </div>
+  </div>
+  <section class="domain" id="domainCard">
+    <div class="domain-row">
+      <div class="domain-icon" aria-hidden="true">♙+</div>
+      <div style="flex:1">
+        <div class="domain-title" id="domainTitle">Inscription</div>
+        <div class="domain-desc" id="domainDesc">Inscription, recherche et gestion des élèves</div>
+        <span class="toggle" id="toggleTools">Masquer les outils</span>
+      </div>
+      <button class="menu" id="collapse" aria-label="Afficher ou masquer les outils" style="color:#293b91">⌃</button>
+    </div>
+  </section>
+  <section class="tools" id="toolsCard">
+    <div class="tools-top">
+      <div class="small-icon" aria-hidden="true">♙+</div>
+      <div style="flex:1">
+        <div class="tools-title" id="toolsTitle">Inscription</div>
+        <div class="tools-desc" id="toolsDesc">Inscription et gestion des élèves</div>
+      </div>
+      <button class="close" id="closeTools" aria-label="Masquer les outils">×</button>
+    </div>
+    <div class="available">Outils disponibles</div>
+    <div class="tool-list" id="domainTools">
+      <button class="tool-item" id="studentsTool"><div class="small-icon" aria-hidden="true">◇</div><div style="flex:1"><div class="label">Élèves</div><div class="desc">Inscription, recherche et gestion des élèves</div></div><span class="chevron">›</span></button>
+    </div>
+  </section>
+  <section id="studentModule" class="tools hidden" aria-label="Gestion des élèves">
+    <div class="tools-top"><div class="small-icon" aria-hidden="true">♙</div><div style="flex:1"><div class="tools-title">Fiche individuelle de l’élève</div><div class="tools-desc">Inscription, recherche, modification et sauvegarde locale.</div></div></div>
+    <form id="studentForm">
+      <h3 class="form-heading">Identité</h3>
+      <div class="form-grid">
+        <label>Nom *<input name="nom" required autocomplete="family-name"></label>
+        <label>Prénom *<input name="prenom" required autocomplete="given-name"></label>
+        <label>Sexe<select name="sexe"><option value="">Choisir…</option><option>Masculin</option><option>Féminin</option></select></label>
+        <label>Date de naissance<input name="naissance" type="date"></label>
+        <label>Classe *<input name="classe" required placeholder="Ex. : 6e A, 2nde C"></label>
+        <label>Statut<select name="statut"><option value="">Choisir…</option><option>Ancien</option><option>RCE</option><option>Entre en 6e</option><option>Entre en 2nde</option><option>Autre</option></select></label>
+        <label>Décision de fin d’année<input name="decision" placeholder="Admis, redouble…"></label>
+        <label>Nationalité<input name="nationalite"></label>
+        <label>Handicapé ?<select name="handicape"><option value="">Choisir…</option><option>Non</option><option>Oui</option></select></label>
+      </div>
+      <h3 class="form-heading">Situation familiale et sociale</h3>
+      <div class="form-grid">
+        <label>Profession du père<input name="professionPere"></label>
+        <label>Profession de la mère<input name="professionMere"></label>
+        <label>Orphelin<select name="orphelin"><option value="">Choisir…</option><option>Non</option><option>Père</option><option>Mère</option><option>Des deux parents</option></select></label>
+        <label>EDI<select name="edi"><option value="">Choisir…</option><option>Non</option><option>Oui</option></select></label>
+        <label>Boursier<select name="boursier"><option value="">Choisir…</option><option>Non</option><option>Oui</option></select></label>
+        <label>Parrainé<select name="parraine"><option value="">Choisir…</option><option>Non</option><option>Oui</option></select></label>
+        <label>Vulnérable<select name="vulnerable"><option value="">Choisir…</option><option>Non</option><option>Oui</option></select></label>
+      </div>
+      <h3 class="form-heading">Documents et parents</h3>
+      <div class="form-grid">
+        <label>Référence de l’extrait de naissance<input name="referenceExtrait"></label>
+        <label>Numéro des parents<input name="numeroParents" type="tel" inputmode="tel" placeholder="Téléphone du parent/tuteur"></label>
+      </div>
+      <div class="form-actions"><button class="primary-btn" type="submit">Enregistrer la fiche</button><button class="secondary-btn" type="button" id="newStudent">Nouvelle fiche</button></div>
+      <p id="formMessage" role="status" class="notice"></p>
+    </form>
+    <div class="saved-section"><h3 class="form-heading">Élèves enregistrés sur cet appareil</h3>
+      <label>Rechercher par nom, prénom ou classe<input id="studentSearch" placeholder="Saisir un nom ou une classe…"></label>
+      <div id="studentList" class="student-list"></div>
+      <div class="form-actions"><button class="secondary-btn" type="button" id="exportStudents">Exporter la sauvegarde (JSON)</button><button class="secondary-btn" type="button" id="importButton">Importer une sauvegarde</button><input id="importFile" type="file" accept="application/json,.json" hidden></div>
+      <p class="notice">Les fiches sont conservées dans le stockage local de ce navigateur, sans envoi sur Internet. Exporte régulièrement une sauvegarde et garde-la dans un autre emplacement. Effacer les données du navigateur peut supprimer les fiches locales.</p>
+    </div>
+  </section>
+  <section id="dailyModule" class="tools hidden" aria-label="Suivi quotidien">
+    <div class="tools-top"><div class="small-icon" aria-hidden="true">▦</div><div style="flex:1"><div class="tools-title" id="dailyModuleTitle">Absence</div><div class="tools-desc" id="dailyModuleDesc">Saisie et suivi des absences</div></div><button class="close" type="button" id="closeDaily" aria-label="Fermer le module">×</button></div>
+    <div id="absenceDirectory" class="absence-directory hidden">
+      <div class="absence-tabs">
+        <button type="button" class="absence-tab" id="absenceJustifications">▣ &nbsp; Justifications</button>
+        <button type="button" class="absence-tab active" id="absenceJournal">◴ &nbsp; Journal</button>
+        <button type="button" class="absence-tab" id="absencePenalties">⚠ &nbsp; Pénalités</button>
+        <button type="button" class="absence-tab" id="absenceExpulsions">↗ &nbsp; Expulsions</button>
+      </div>
+      <input id="absenceStudentSearch" class="absence-search" placeholder="⌕  Rechercher un élève" aria-label="Rechercher un élève">
+      <select id="absenceClassFilter" class="absence-class" aria-label="Filtrer par classe"><option value="">▣ &nbsp; Toutes les classes</option></select>
+      <div id="absenceStudentList" class="absence-student-list"></div>
+    </div>
+    <div id="aviseePage" class="avisee-page hidden"><div id="aviseeList"></div><div id="aviseeEmpty" class="avisee-empty"><div class="big">▣</div><div>Aucune absence avisée pour l’année scolaire active.</div></div><button type="button" id="aviseeAdd" class="avisee-add">＋ &nbsp; Ajouter</button></div>
+    <div id="aviseeModalBackdrop" class="avisee-modal-backdrop hidden"><form id="aviseeModalForm" class="avisee-modal"><h2>Nouvelle absence avisée</h2><label>Rechercher un élève *<input id="aviseeStudentInput" autocomplete="off" placeholder="⌕  Rechercher un élève *" required><div id="aviseeSuggestions" class="avisee-suggestions"></div></label><label>Raison *<textarea id="aviseeReason" required></textarea></label><label>Période<input id="aviseePeriod" placeholder="Ex. : matin, journée entière, du 3 au 5 novembre"></label><label>Date de l’avis *<input id="aviseeNoticeDate" type="date" required></label><label>Date de retour <span style="font-size:13px">(facultative)</span><input id="aviseeReturnDate" type="date"></label><div class="modal-actions"><button type="button" class="cancel" id="aviseeCancel">Annuler</button><button type="submit" class="save">Enregistrer</button></div></form></div>
+    <button type="button" id="absenceBack" class="absence-back hidden">‹ Retour à la liste des élèves</button>
+    <form id="dailyForm">
+      <div id="dailyFields" class="daily-form-grid"></div>
+      <div class="form-actions"><button class="primary-btn" type="submit" id="dailySave">Enregistrer</button><button class="secondary-btn" type="button" id="dailyReset">Nouvelle saisie</button></div>
+      <p id="dailyMessage" role="status" class="notice"></p>
+    </form>
+    <div class="saved-section"><h3 class="form-heading">Enregistrements sauvegardés sur cet appareil</h3>
+      <label>Rechercher<input id="dailySearch" placeholder="Nom, classe, date ou détail…"></label>
+      <div id="dailyList" class="student-list"></div>
+      <div class="form-actions"><button class="secondary-btn" type="button" id="exportDaily">Exporter les données (JSON)</button><button class="secondary-btn" type="button" id="importDailyButton">Importer une sauvegarde</button><input id="importDailyFile" type="file" accept="application/json,.json" hidden></div>
+      <p class="notice">Les données sont enregistrées localement dans ce navigateur. Exportez régulièrement une sauvegarde et conservez-la ailleurs. L’effacement des données du navigateur peut supprimer les enregistrements.</p>
+    </div>
+  </section>
+
+  <section id="analysisModule" class="tools hidden" aria-label="Consultation et analyse">
+    <div class="tools-top"><div class="small-icon" aria-hidden="true">▥</div><div style="flex:1"><div class="tools-title" id="analysisTitle">Historique scolaire</div><div class="tools-desc" id="analysisDesc">Consulter les années scolaires clôturées</div></div><button class="close" type="button" id="closeAnalysis" aria-label="Fermer le module">×</button></div>
+    <div id="historyPanel" class="analysis-panel">
+      <h3>Historique scolaire</h3>
+      <p class="notice">Créez une archive à la clôture de chaque année scolaire. Une archive conserve une copie des fiches élèves et des enregistrements du suivi quotidien présents sur cet appareil au moment de la clôture.</p>
+      <div class="analysis-grid">
+        <label>Année scolaire à clôturer<input id="archiveYear" placeholder="Ex. : 2025-2026"></label>
+        <label>&nbsp;<button class="primary-btn" type="button" id="createArchive">Clôturer et archiver cette année</button></label>
+      </div>
+      <div id="archiveMessage" class="notice" role="status"></div>
+      <h3>Années scolaires archivées</h3>
+      <div id="archiveList" class="student-list"></div>
+      <div id="archiveDetails"></div>
+    </div>
+    <div id="filterPanel" class="analysis-panel hidden">
+      <label class="filter-volet">Choisir un volet<select id="analysisView"><option value="students">Statistiques des élèves</option></select></label>
+      <h3>Critères de filtrage</h3>
+      <p class="notice">Les critères peuvent être utilisés séparément ou simultanément.</p>
+      <div class="filter-card">
+        <label>Groupe de classes<select id="analysisGroup"><option value="">Tous les groupes</option></select></label>
+        <label>Classe<select id="analysisClass"><option value="">Toutes les classes</option></select></label>
+        <div class="filter-age"><label>Condition<select id="analysisAgeCondition"><option value="=">=</option><option value=">">&gt;</option><option value="<">&lt;</option><option value=">=">≥</option><option value="<=">≤</option></select></label><label>Âge<input id="analysisAge" type="number" min="0" max="120" placeholder="Âge"></label></div>
+        <label>Sexe<select id="analysisSex"><option value="">Tous les sexes</option><option>Masculin</option><option>Féminin</option></select></label>
+        <label>Statut<select id="analysisStatus"><option value="">Tous les statuts</option><option>Ancien</option><option>RCE</option><option>Entre en 6e</option><option>Entre en 2nde</option><option>Autre</option></select></label>
+        <label>Profession du père<select id="analysisFather"><option value="">Toutes les professions</option></select></label>
+        <label>Handicap<select id="analysisHandicap"><option value="">Tous les handicaps</option><option value="Oui">Oui</option><option value="Non">Non</option></select></label>
+        <label>Orphelin<select id="analysisOrphan"><option value="">Toutes les situations</option><option>Non</option><option>Père</option><option>Mère</option><option>Des deux parents</option></select></label>
+        <label>EDI<select id="analysisEdi"><option value="">Tous</option><option>Oui</option><option>Non</option></select></label>
+        <label>Boursier<select id="analysisScholar"><option value="">Tous</option><option>Oui</option><option>Non</option></select></label>
+        <label>Parrainé<select id="analysisSponsored"><option value="">Tous</option><option>Oui</option><option>Non</option></select></label>
+        <label>Vulnérable<select id="analysisVulnerable"><option value="">Tous</option><option>Oui</option><option>Non</option></select></label>
+        <button class="secondary-btn filter-reset" type="button" id="resetAnalysis">↻ &nbsp; RÉINITIALISER LES FILTRES</button>
+      </div>
+      <div id="analysisTotal" class="filter-total">TOTAL : 0 élève</div>
+      <button class="secondary-btn filter-export" type="button" id="exportAnalysis">⇩ &nbsp; EXPORTER LES RÉSULTATS EN EXCEL</button>
+      <h3>Résultats</h3>
+      <div id="analysisResults" class="student-list"></div>
+      <button class="secondary-btn" type="button" id="exportFullBackup">Exporter toutes les données (JSON)</button>
+      <p class="notice">Les filtres et exports utilisent les fiches enregistrées sur cet appareil. Aucune donnée n’est envoyée sur Internet.</p>
+    </div>
+  </section>
+
+  <section id="configurationModule" class="tools hidden" aria-label="Paramètres scolaires">
+    <div class="tools-top"><div class="small-icon" aria-hidden="true">⚙</div><div style="flex:1"><div class="tools-title">Paramètres</div><div class="tools-desc">Organisation et paramètres scolaires</div></div><button class="close" type="button" id="closeConfiguration" aria-label="Fermer les paramètres">×</button></div>
+    <div id="settingsMenu" class="settings-menu">
+      <button type="button" class="settings-card" data-settings-open="classes"><span class="settings-icon">▣</span><span class="settings-copy"><strong>Classes</strong><small>Gestion des classes et de la classe suivante</small></span><span class="settings-chevron">›</span></button>
+      <button type="button" class="settings-card" data-settings-open="groups"><span class="settings-icon">▣</span><span class="settings-copy"><strong>Groupes de classes</strong><small>Créer des groupes et associer les classes</small></span><span class="settings-chevron">›</span></button>
+      <button type="button" class="settings-card" data-settings-open="year"><span class="settings-icon">▦</span><span class="settings-copy"><strong>Année scolaire</strong><small>Gestion de l’année scolaire</small></span><span class="settings-chevron">›</span></button>
+      <button type="button" class="settings-card" data-settings-open="regime"><span class="settings-icon">▦</span><span class="settings-copy"><strong>Régime</strong><small>Trimestres ou semestres</small></span><span class="settings-chevron">›</span></button>
+    </div>
+    <form id="configurationForm" class="hidden">
+      <div class="settings-panel hidden" data-settings-panel="classes">
+        <button type="button" class="settings-back">‹ &nbsp; Paramètres</button>
+        <h3 class="form-heading">Classes</h3>
+        <label class="config-wide">Liste des classes <span class="notice">Une classe par ligne (ex. : 6e A, 6e B, 2nde C).</span><textarea id="configClasses" rows="8" placeholder="6e A&#10;6e B&#10;2nde C"></textarea></label>
+        <p class="notice">Vous pouvez ajouter, modifier ou supprimer les classes de l’établissement. Séparez les classes en allant à la ligne.</p>
+      </div>
+      <div class="settings-panel hidden" data-settings-panel="groups">
+        <button type="button" class="settings-back">‹ &nbsp; Paramètres</button>
+        <h3 class="form-heading">Groupes de classes</h3>
+        <label class="config-wide">Liste des groupes <span class="notice">Un groupe par ligne.</span><textarea id="configGroups" rows="7" placeholder="Groupe 1&#10;Groupe 2"></textarea></label>
+        <p class="notice">Les groupes servent à organiser les classes. Laissez vide si votre établissement n’utilise pas de groupes.</p>
+      </div>
+      <div class="settings-panel hidden" data-settings-panel="year">
+        <button type="button" class="settings-back">‹ &nbsp; Paramètres</button>
+        <h3 class="form-heading">Année scolaire</h3>
+        <label class="config-wide">Année scolaire<input name="annee" id="configYear" placeholder="Ex. : 2026-2027" required></label>
+        <p class="notice">Indiquez l’année scolaire en cours. Le changement d’année peut remettre la progression des périodes à zéro, sans supprimer les saisies déjà enregistrées.</p>
+      </div>
+      <div class="settings-panel hidden" data-settings-panel="regime">
+        <button type="button" class="settings-back">‹ &nbsp; Paramètres</button>
+        <h3 class="form-heading">Régime scolaire</h3>
+        <label class="config-wide">Choisissez le régime scolaire<select name="regime" id="configRegime"><option value="trimestre">Trimestres</option><option value="semestre">Semestres</option></select></label>
+        <div id="periodPreview" class="notice">Périodes : 1er trimestre, 2e trimestre et 3e trimestre.</div>
+        <section class="period-manager" aria-label="Gestion des périodes scolaires">
+          <h3 class="form-heading">Période active</h3>
+          <p class="notice">La progression se fait dans l'ordre. Une période terminée reste conservée dans l'historique. Vous pouvez la réactiver depuis l'historique.</p>
+          <div id="activePeriods" class="period-list"></div>
+          <button type="button" class="primary-btn" id="finishPeriodBtn">Terminer cette période et passer à la suivante</button>
+          <p id="periodMessage" class="notice" role="status"></p>
+          <h3 class="form-heading">Historique</h3>
+          <p class="notice">Consultez les absences et les pénalités des périodes déjà écoulées.</p>
+          <div id="periodHistory" class="period-history"></div>
+        </section>
+      </div>
+      <div class="form-actions settings-save"><button class="primary-btn" type="submit">Enregistrer les paramètres</button><button class="secondary-btn" type="button" id="resetConfiguration">Réinitialiser</button></div>
+      <p id="configurationMessage" class="notice" role="status"></p>
+    </form>
+    <p class="notice">Ces paramètres sont conservés localement sur cet appareil. Pensez à exporter régulièrement une sauvegarde JSON.</p>
+  </section>
+
+  <section id="administrationModule" class="tools hidden" aria-label="Administration">
+    <div class="tools-top"><div class="small-icon" aria-hidden="true">♙</div><div style="flex:1"><div class="tools-title" id="adminTitle">Administration</div><div class="tools-desc" id="adminDesc">Gestion administrative de KAM Éducateur</div></div><button class="close" type="button" id="closeAdmin" aria-label="Fermer le module">×</button></div>
+    <button type="button" class="absence-back hidden" id="adminBack">‹ &nbsp; Administration</button>
+    <div id="adminMenu" class="admin-tools"></div>
+    <div id="adminContent" class="admin-panel hidden"></div>
+  </section>
+
+  <p class="notice" id="notice" hidden>Étape 3 : fiche individuelle d’inscription des élèves.</p>
+</main>
+<script>
+const domains = [
+  {title:'Inscription', desc:'Inscription, recherche et gestion des élèves', toolsTitle:'Inscription', toolsDesc:'Inscription et gestion des élèves', icon:'♙+'},
+  {title:'Suivi quotidien', desc:'Absences, absences avisées, incidents, objets confisqués et carnet journalier', toolsTitle:'Suivi quotidien', toolsDesc:'Gestion quotidienne de la vie scolaire', icon:'▦'},
+  {title:'Consultation & analyse', desc:'Historique scolaire, filtres et export des données', toolsTitle:'Consultation & analyse', toolsDesc:'Historique et exploitation des données', icon:'▥'},
+  {title:'Configuration', desc:'Classes, groupes, année scolaire et régime', toolsTitle:'Configuration', toolsDesc:'Organisation et paramètres scolaires', icon:'☷'},
+  {title:'Administration', desc:'Utilisateurs, importations, licence et sauvegarde', toolsTitle:'Administration', toolsDesc:'Gestion administrative de KAM Éducateur', icon:'♙'}
+];
+let index=0, visible=true;
+const $=id=>document.getElementById(id);
+function render(){
+ const d=domains[index];
+ document.body.classList.toggle('admin-theme',index===4);
+ $('count').textContent=(index+1)+' / '+domains.length;
+ $('domainTitle').textContent=d.title;
+ $('domainDesc').textContent=d.desc;
+ $('toolsTitle').textContent=d.toolsTitle;
+ $('toolsDesc').textContent=d.toolsDesc;
+ $('domainCard').querySelector('.domain-icon').textContent=d.icon;
+ $('prev').disabled=index===0;
+ $('prev').classList.toggle('active',index>0);
+ $('next').disabled=index===domains.length-1;
+ $('next').classList.toggle('active',index<domains.length-1);
+ $('toolsCard').classList.toggle('hidden',!visible);
+ $('toggleTools').textContent=visible?'Masquer les outils':'Afficher les outils';
+ $('collapse').textContent=visible?'⌃':'⌄';
+ renderDomainTools();
+}
+function toggle(){visible=!visible;render()}
+$('prev').addEventListener('click',()=>{if(index>0){index--;render()}});
+$('next').addEventListener('click',()=>{if(index<domains.length-1){index++;visible=true;render()}});
+$('toggleTools').addEventListener('click',toggle);
+$('collapse').addEventListener('click',toggle);
+$('closeTools').addEventListener('click',()=>{visible=false;render()});
+$('domainCard').addEventListener('click',e=>{if(e.target.id!=='toggleTools'&&e.target.id!=='collapse'){toggle()}});
+const studentModule=$('studentModule'), studentForm=$('studentForm'), storageKey='kamEducateurElevesV1';
+let editingId=null;
+function getStudents(){try{return JSON.parse(localStorage.getItem(storageKey)||'[]')}catch(e){return []}}
+function saveStudents(rows){localStorage.setItem(storageKey,JSON.stringify(rows))}
+function formData(){const d={};new FormData(studentForm).forEach((v,k)=>d[k]=String(v).trim());return d}
+function resetStudentForm(){studentForm.reset();editingId=null;$('formMessage').textContent='';studentForm.querySelector('button[type="submit"]').textContent='Enregistrer la fiche'}
+function showStudentModule(){administrationModule.classList.add('hidden');studentModule.classList.remove('hidden');studentModule.scrollIntoView({behavior:'smooth',block:'start'});renderStudentList()}
+function renderStudentList(){
+ const q=$('studentSearch').value.trim().toLocaleLowerCase('fr');
+ const rows=getStudents().filter(s=>[s.nom,s.prenom,s.classe].some(v=>(v||'').toLocaleLowerCase('fr').includes(q)));
+ const list=$('studentList');list.replaceChildren();
+ if(!rows.length){list.textContent='Aucune fiche enregistrée pour cette recherche.';return}
+ rows.forEach(s=>{const card=document.createElement('div');card.className='student-record';const info=document.createElement('div');const name=document.createElement('strong');name.textContent=(s.nom||'')+' '+(s.prenom||'');const details=document.createElement('span');details.textContent='Classe : '+(s.classe||'Non précisée')+' · Statut : '+(s.statut||'Non précisé');info.append(name,details);const actions=document.createElement('div');actions.className='record-actions';const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.addEventListener('click',()=>{editingId=s.id;Object.entries(s).forEach(([k,v])=>{if(studentForm.elements[k])studentForm.elements[k].value=v||''});$('formMessage').textContent='Modification de la fiche sélectionnée.';studentForm.querySelector('button[type="submit"]').textContent='Enregistrer les modifications';studentForm.scrollIntoView({behavior:'smooth',block:'start'})});const del=document.createElement('button');del.type='button';del.textContent='Supprimer';del.addEventListener('click',()=>{if(confirm('Supprimer la fiche de '+(s.nom||'')+' '+(s.prenom||'')+' ?')){saveStudents(getStudents().filter(x=>x.id!==s.id));renderStudentList()}});actions.append(edit,del);card.append(info,actions);list.append(card)})
+}
+studentForm.addEventListener('submit',e=>{e.preventDefault();const data=formData(),rows=getStudents();if(editingId){const i=rows.findIndex(s=>s.id===editingId);if(i>=0)rows[i]={...rows[i],...data}}else rows.push({id:String(Date.now())+'-'+Math.random().toString(36).slice(2,8),...data});try{saveStudents(rows);resetStudentForm();$('formMessage').textContent='Fiche enregistrée sur cet appareil.';renderStudentList()}catch(err){$('formMessage').textContent='Enregistrement impossible : vérifie l’espace disponible du navigateur.'}});
+$('newStudent').addEventListener('click',resetStudentForm);$('studentSearch').addEventListener('input',renderStudentList);
+$('exportStudents').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(getStudents(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='KAM_Educateur_sauvegarde_eleves.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('importButton').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const incoming=JSON.parse(await file.text());if(!Array.isArray(incoming)||incoming.some(x=>!x||typeof x!=='object'||!x.nom||!x.prenom)){throw new Error('format')}if(confirm('Importer '+incoming.length+' fiche(s) ? Les fiches ayant le même identifiant seront remplacées.')){const current=getStudents(),map=new Map(current.map(x=>[x.id,x]));incoming.forEach((x,i)=>map.set(x.id||('import-'+Date.now()+'-'+i),{...x,id:x.id||('import-'+Date.now()+'-'+i)}));saveStudents([...map.values()]);renderStudentList();$('formMessage').textContent='Sauvegarde importée.'}}catch(err){alert('Fichier de sauvegarde invalide ou impossible à lire.')}e.target.value=''});
+$('studentsTool').addEventListener('click',()=>{if(index===0){showStudentModule()}else if(index===1){openDailyModule('absence')}});
+const dailyModule=$('dailyModule'), dailyForm=$('dailyForm'), dailyStorageKey='kamEducateurSuiviQuotidienV1';
+const dailyTypes={
+ absence:{title:'Absence',desc:'Saisie et suivi des absences',icon:'◷',fields:[['date','Date','date',true],['nom','Nom de l’élève','text',true],['prenom','Prénom','text',true],['classe','Classe','text',true],['debut','Heure de début','time',false],['fin','Heure de fin','time',false],['duree','Durée (heures)','number',false],['motif','Motif / observations','textarea',false],['justifiee','Absence justifiée ?','select',false,['À déterminer','Oui','Non']],['contact','Parent/tuteur contacté ?','select',false,['Non','Oui']]]},
+ avisee:{title:'Absences avisées',desc:'Absences signalées par la famille ou à l’avance',icon:'♧',fields:[['date','Date de l’absence','date',true],['nom','Nom de l’élève','text',true],['prenom','Prénom','text',true],['classe','Classe','text',true],['dateAvis','Date de l’avis','date',false],['avisPar','Avis donné par','text',false],['motif','Motif annoncé','textarea',true],['preuve','Justificatif / référence','text',false],['suivi','Suite donnée','select',false,['En attente','Justificatif reçu','Validée','Non validée']]]},
+ incident:{title:'Incidents',desc:'Enregistrement et suivi des incidents',icon:'⚠',fields:[]},
+ penalite:{title:'Pénalité',desc:'Suivi des pénalités',icon:'⚠',fields:[['date','Date','date',true],['nom','Nom de l’élève','text',true],['prenom','Prénom','text',true],['classe','Classe','text',true],['motif','Motif','textarea',true],['points','Points retirés','number',true],['observations','Observations','textarea',false]]},
+ expulsion:{title:'Expulsion',desc:'Suivi des heures d’expulsion',icon:'↗',fields:[['date','Date','date',true],['nom','Nom de l’élève','text',true],['prenom','Prénom','text',true],['classe','Classe','text',true],['debut','Heure de début','time',false],['fin','Heure de fin','time',false],['duree','Durée (heures)','number',true],['motif','Motif','textarea',true]]},
+ objet:{title:'Objets confisqués',desc:'Enregistrement et suivi des objets retenus',icon:'▣',fields:[['date','Date de confiscation','date',true],['heure','Heure','time',false],['nom','Nom de l’élève','text',true],['prenom','Prénom','text',false],['classe','Classe','text',true],['objet','Objet confisqué','text',true],['motif','Motif de la confiscation','textarea',true],['depositaire','Objet remis à','text',false],['restitution','Statut de restitution','select',true,['Conservé','Restitué à l’élève','Remis au parent','Transmis à la direction']],['dateRestitution','Date de restitution','date',false]]},
+ carnet:{title:'Carnet journalier',desc:'Consignation des activités et événements de la journée',icon:'▤',fields:[['date','Date','date',true],['heure','Heure','time',false],['rubrique','Rubrique','select',true,['Activité','Événement','Visite / rencontre','Consigne reçue','Suivi d’élève','Autre']],['classe','Classe concernée','text',false],['objet','Objet / titre','text',true],['contenu','Compte rendu','textarea',true],['suite','Action à mener / suivi','textarea',false]]}
+};
+let dailyType='absence', dailyEditingId=null;
+function getDaily(){try{return JSON.parse(localStorage.getItem(dailyStorageKey)||'[]')}catch(e){return []}}
+function saveDaily(rows){localStorage.setItem(dailyStorageKey,JSON.stringify(rows))}
+function renderDomainTools(){const holder=$('domainTools');if(!holder)return;holder.replaceChildren();if(index===0){holder.append(makeToolButton('Élèves','Inscription, recherche et gestion des élèves','◇',()=>showStudentModule()));return;}if(index===1){[['absence','Absence','Saisie et suivi des absences','◷'],['avisee','Absences avisées','Absences signalées à l’avance','♧'],['incident','Incidents','Enregistrement et suivi des incidents','⚠'],['objet','Objets confisqués','Suivi des objets retenus','▣'],['carnet','Carnet journalier','Journal des activités et événements','▤']].forEach(x=>holder.append(makeToolButton(x[1],x[2],x[3],()=>openDailyModule(x[0]))));return;}if(index===2){holder.append(makeToolButton('Historique scolaire','Consulter les années scolaires clôturées','▧',()=>openAnalysisModule('history')));holder.append(makeToolButton('Filtrage / Export','Filtres, statistiques et export des données','▽',()=>openAnalysisModule('filter')));return;}if(index===3){holder.append(makeToolButton('Paramètres','Classes, groupes, année scolaire et régime','⚙',openConfiguration));return;}if(index===4){[['Utilisateurs','Créer, modifier, activer ou désactiver les comptes utilisateurs.','♙','users'],['Importations','Importer et contrôler les données depuis des fichiers Excel ou CSV.','⇧','imports'],['Licence','Consulter les informations de licence de KAM Éducateur.','⚿','license'],['Sauvegarde des données','Créer une copie complète et sécurisée des données.','☁','backup'],['Opérations décisives','Restauration des données et autres opérations décisives.','⚠','critical']].forEach(x=>holder.append(makeToolButton(x[0],x[1],x[2],()=>openAdminPanel(x[3]))));return;} }
+function makeToolButton(title,desc,iconText,fn){const b=document.createElement('button');b.className='tool-item';b.type='button';const ic=document.createElement('div');ic.className='small-icon';ic.textContent=iconText;const body=document.createElement('div');body.style.flex='1';const t=document.createElement('div');t.className='label';t.textContent=title;const d=document.createElement('div');d.className='desc';d.textContent=desc;body.append(t,d);const ch=document.createElement('span');ch.className='chevron';ch.textContent='›';b.append(ic,body,ch);b.addEventListener('click',fn);return b}
+function openDailyModule(type){administrationModule.classList.add('hidden');dailyType=type;dailyEditingId=null;dailyForm.reset();$('absenceDirectory').classList.toggle('hidden',type!=='absence');$('absenceBack').classList.add('hidden');dailyForm.classList.toggle('hidden',type==='absence');$('dailyModule').querySelector('.saved-section').classList.toggle('hidden',type==='absence');$('dailyModuleTitle').textContent=dailyTypes[type].title;$('dailyModuleDesc').textContent=dailyTypes[type].desc;$('dailyFields').replaceChildren();dailyTypes[type].fields.forEach(f=>{const lab=document.createElement('label');lab.textContent=f[1]+(f[3]?' *':'');let el;if(f[2]==='textarea'){el=document.createElement('textarea')}else if(f[2]==='select'){el=document.createElement('select');(f[4]||[]).forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;el.append(op)})}else{el=document.createElement('input');el.type=f[2];if(f[2]==='number'){el.min='0';el.step='0.5'}}el.name=f[0];el.required=!!f[3];lab.append(el);$('dailyFields').append(lab)});$('dailyMessage').textContent='';$('dailySave').textContent='Enregistrer';dailyModule.classList.remove('hidden');studentModule.classList.add('hidden');if(type==='absence')renderAbsenceStudents();dailyModule.scrollIntoView({behavior:'smooth',block:'start'});renderDailyList()}
+function renderAbsenceStudents(){
+ const q=$('absenceStudentSearch').value.trim().toLocaleLowerCase('fr');const cl=$('absenceClassFilter').value;const students=getStudents();const classes=[...new Set(students.map(s=>(s.classe||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));const sel=$('absenceClassFilter');const old=sel.value;sel.replaceChildren();const all=document.createElement('option');all.value='';all.textContent='▣  Toutes les classes';sel.append(all);classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.append(o)});sel.value=classes.includes(cl)?cl:'';
+ const list=$('absenceStudentList');list.replaceChildren();const rows=students.filter(s=>(!sel.value||s.classe===sel.value)&&[s.nom,s.prenom,s.classe].some(v=>(v||'').toLocaleLowerCase('fr').includes(q))).sort((a,b)=>(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr'));
+ if(!rows.length){const empty=document.createElement('p');empty.className='notice';empty.textContent=students.length?'Aucun élève ne correspond à la recherche.':'Aucun élève enregistré. Ajoutez d’abord les élèves dans le domaine Inscription.';list.append(empty);return}
+ rows.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='absence-student';const av=document.createElement('span');av.className='absence-avatar';av.textContent='♟';const info=document.createElement('span');info.className='absence-student-info';const name=document.createElement('strong');name.textContent=((s.nom||'')+' '+(s.prenom||'')).trim();const cls=document.createElement('span');cls.textContent='Classe : '+(s.classe||'Non précisée');info.append(name,cls);const ch=document.createElement('span');ch.className='absence-chevron';ch.textContent='›';b.append(av,info,ch);b.addEventListener('click',()=>{dailyForm.classList.remove('hidden');$('dailyModule').querySelector('.saved-section').classList.remove('hidden');$('absenceDirectory').classList.add('hidden');$('absenceBack').classList.remove('hidden');dailyFieldsFillStudent(s);dailyForm.scrollIntoView({behavior:'smooth',block:'start'})});list.append(b)})
+}
+function dailyFieldsFillStudent(s){$('dailyFields').replaceChildren();dailyTypes.absence.fields.forEach(f=>{const lab=document.createElement('label');lab.textContent=f[1]+(f[3]?' *':'');let el;if(f[2]==='textarea')el=document.createElement('textarea');else if(f[2]==='select'){el=document.createElement('select');(f[4]||[]).forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;el.append(op)})}else{el=document.createElement('input');el.type=f[2];if(f[2]==='number'){el.min='0';el.step='0.5'}}el.name=f[0];el.required=!!f[3];lab.append(el);$('dailyFields').append(lab)});dailyForm.elements.nom.value=s.nom||'';dailyForm.elements.prenom.value=s.prenom||'';dailyForm.elements.classe.value=s.classe||'';dailyForm.elements.date.value=new Date().toISOString().slice(0,10);$('dailyMessage').textContent='Élève sélectionné : complétez les informations de l’absence.'}
+$('absenceStudentSearch').addEventListener('input',renderAbsenceStudents);$('absenceClassFilter').addEventListener('change',renderAbsenceStudents);
+$('absenceJustifications').addEventListener('click',()=>openDailyModule('avisee'));
+$('absenceJournal').addEventListener('click',()=>{dailyType='absence';$('absenceDirectory').classList.add('hidden');$('dailyForm').classList.add('hidden');$('absenceBack').classList.add('hidden');$('dailyModule').querySelector('.saved-section').classList.remove('hidden');$('dailyModuleTitle').textContent='Journal des absences';$('dailyModuleDesc').textContent='Historique des absences enregistrées';renderDailyList()});
+$('absencePenalties').addEventListener('click',()=>openDailyModule('penalite'));$('absenceExpulsions').addEventListener('click',()=>openDailyModule('expulsion'));
+$('absenceBack').addEventListener('click',()=>{dailyForm.classList.add('hidden');$('dailyModule').querySelector('.saved-section').classList.add('hidden');$('absenceDirectory').classList.remove('hidden');$('absenceBack').classList.add('hidden');renderAbsenceStudents()});
+function resetDailyForm(){dailyForm.reset();dailyEditingId=null;$('dailyMessage').textContent='';$('dailySave').textContent='Enregistrer'}
+function dailyFormData(){const d={};new FormData(dailyForm).forEach((v,k)=>{const value=String(v).trim();if(Object.prototype.hasOwnProperty.call(d,k)){if(!Array.isArray(d[k]))d[k]=[d[k]];d[k].push(value)}else d[k]=value});return d}
+function renderDailyList(){const q=$('dailySearch').value.trim().toLocaleLowerCase('fr');const rows=getDaily().filter(r=>r.type===dailyType&&Object.values(r.data||{}).some(v=>String(v||'').toLocaleLowerCase('fr').includes(q)));const list=$('dailyList');list.replaceChildren();if(!rows.length){list.textContent='Aucun enregistrement pour cette recherche.';return}rows.sort((a,b)=>(b.created||'').localeCompare(a.created||''));rows.forEach(r=>{const card=document.createElement('div');card.className='daily-record';const info=document.createElement('div');const strong=document.createElement('strong');const d=r.data||{};strong.textContent=(d.nom||d.eleves||d.objet||d.rubrique||dailyTypes[r.type].title)+' — '+(d.date||'Date non précisée');const detail=document.createElement('div');detail.textContent=[d.studentName,d.studentClass,d.classe,d.prenom,d.motif,d.description,d.contenu,d.statut,d.nature,d.violence,d.crise,d.intrusion,d.manquement,d.autresIncidences,d.auteur,d.victime,d.raisons].filter(Boolean).map(v=>Array.isArray(v)?v.join(', '):String(v)).join(' · ');info.append(strong,detail);const actions=document.createElement('div');actions.className='record-actions';const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.addEventListener('click',()=>{dailyEditingId=r.id;if(dailyType==='incident'){renderIncidentForm();restoreIncidentForm(d)}else Object.entries(d).forEach(([k,v])=>{if(dailyForm.elements[k])dailyForm.elements[k].value=v||''});$('dailySave').textContent='Enregistrer les modifications';$('dailyMessage').textContent='Modification de l’enregistrement sélectionné.';dailyForm.scrollIntoView({behavior:'smooth',block:'start'})});const del=document.createElement('button');del.type='button';del.textContent='Supprimer';del.addEventListener('click',()=>{if(confirm('Supprimer cet enregistrement ?')){saveDaily(getDaily().filter(x=>x.id!==r.id));renderDailyList()}});actions.append(edit,del);card.append(info,actions);list.append(card)})}
+dailyForm.addEventListener('submit',e=>{e.preventDefault();const data=dailyFormData(),rows=getDaily();if(dailyEditingId){const i=rows.findIndex(r=>r.id===dailyEditingId);if(i>=0)rows[i]={...rows[i],data,updated:new Date().toISOString()}}else{const c=getConfiguration(),labels=periodLabels(c.regime);const periodIndex=Math.min(Number(c.completedPeriods||0),labels.length-1);rows.push({id:String(Date.now())+'-'+Math.random().toString(36).slice(2,8),type:dailyType,data,periodIndex,periodName:labels[periodIndex],schoolYear:c.annee||'',created:new Date().toISOString()})}try{saveDaily(rows);resetDailyForm();$('dailyMessage').textContent='Enregistrement sauvegardé sur cet appareil.';renderDailyList()}catch(err){$('dailyMessage').textContent='Enregistrement impossible : vérifiez l’espace disponible du navigateur.'}});
+$('dailyReset').addEventListener('click',resetDailyForm);$('dailySearch').addEventListener('input',renderDailyList);$('closeDaily').addEventListener('click',()=>dailyModule.classList.add('hidden'));
+$('exportDaily').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(getDaily(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='KAM_Educateur_suivi_quotidien.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('importDailyButton').addEventListener('click',()=>$('importDailyFile').click());$('importDailyFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const incoming=JSON.parse(await file.text());if(!Array.isArray(incoming)||incoming.some(x=>!x||typeof x!=='object'||!x.type||!x.data||typeof x.data!=='object'))throw new Error('format');if(confirm('Importer '+incoming.length+' enregistrement(s) ? Les identifiants identiques seront remplacés.')){const map=new Map(getDaily().map(x=>[x.id,x]));incoming.forEach((x,i)=>map.set(x.id||('import-'+Date.now()+'-'+i),{...x,id:x.id||('import-'+Date.now()+'-'+i)}));saveDaily([...map.values()]);renderDailyList();$('dailyMessage').textContent='Sauvegarde importée.'}}catch(err){alert('Fichier de sauvegarde invalide ou impossible à lire.')}e.target.value=''});
+
+// Domaine 3 — Consultation & analyse
+const archiveStorageKey='kamEducateurArchivesV1';
+const analysisModule=$('analysisModule');
+function getArchives(){try{return JSON.parse(localStorage.getItem(archiveStorageKey)||'[]')}catch(e){return []}}
+function saveArchives(rows){localStorage.setItem(archiveStorageKey,JSON.stringify(rows))}
+function openAnalysisModule(mode){
+  administrationModule.classList.add('hidden');
+  analysisModule.classList.remove('hidden');studentModule.classList.add('hidden');dailyModule.classList.add('hidden');
+  const history=mode==='history';
+  $('analysisTitle').textContent=history?'Historique scolaire':'Filtrage / Export';
+  $('analysisDesc').textContent=history?'Consulter les années scolaires clôturées':'Filtres, statistiques et export des données';
+  $('historyPanel').classList.toggle('hidden',!history);$('filterPanel').classList.toggle('hidden',history);
+  if(history)renderArchives();else{populateAnalysisClasses();renderAnalysisResults()}
+  analysisModule.scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('closeAnalysis').addEventListener('click',()=>analysisModule.classList.add('hidden'));
+$('createArchive').addEventListener('click',()=>{
+  const year=$('archiveYear').value.trim();
+  if(!/^\d{4}\s*[-/]\s*\d{4}$/.test(year)){ $('archiveMessage').textContent='Saisissez une année scolaire au format 2025-2026.';return; }
+  const rows=getArchives();const archive={id:year.replace(/\s/g,''),year,closedAt:new Date().toISOString(),students:getStudents(),daily:getDaily()};
+  const existing=rows.findIndex(x=>x.id===archive.id);
+  if(existing>=0&&!confirm('Cette année est déjà archivée. Remplacer son archive ?'))return;
+  if(existing>=0)rows[existing]=archive;else rows.push(archive);
+  try{saveArchives(rows);$('archiveMessage').textContent='Archive enregistrée sur cet appareil.';renderArchives()}catch(e){$('archiveMessage').textContent='Archivage impossible : espace de stockage insuffisant.'}
+});
+function renderArchives(){
+  const list=$('archiveList'),details=$('archiveDetails');list.replaceChildren();details.replaceChildren();
+  const rows=getArchives().sort((a,b)=>String(b.year).localeCompare(String(a.year)));
+  if(!rows.length){list.textContent='Aucune année scolaire archivée pour le moment.';return}
+  rows.forEach(a=>{
+    const card=document.createElement('div');card.className='daily-record';
+    const info=document.createElement('div');const strong=document.createElement('strong');strong.textContent=a.year;
+    const meta=document.createElement('div');meta.textContent=(a.students||[]).length+' élève(s) · '+(a.daily||[]).length+' enregistrement(s)';
+    info.append(strong,meta);
+    const actions=document.createElement('div');actions.className='record-actions';
+    const view=document.createElement('button');view.type='button';view.textContent='Consulter';view.addEventListener('click',()=>{
+      details.replaceChildren();const box=document.createElement('div');box.className='analysis-panel';
+      const h=document.createElement('h3');h.textContent='Archive '+a.year;
+      const p=document.createElement('p');p.textContent='Clôturée le '+new Date(a.closedAt).toLocaleString('fr-FR')+' · '+(a.students||[]).length+' élèves · '+(a.daily||[]).length+' enregistrements.';
+      const exp=document.createElement('button');exp.type='button';exp.className='secondary-btn';exp.textContent='Exporter cette archive (JSON)';exp.addEventListener('click',()=>downloadJSON(a,'KAM_Educateur_Archive_'+a.id+'.json'));
+      box.append(h,p,exp);details.append(box);details.scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+    const del=document.createElement('button');del.type='button';del.textContent='Supprimer';del.addEventListener('click',()=>{if(confirm('Supprimer définitivement l’archive '+a.year+' de cet appareil ?')){saveArchives(getArchives().filter(x=>x.id!==a.id));renderArchives()}});
+    actions.append(view,del);card.append(info,actions);list.append(card);
+  });
+}
+function classGroup(value){const v=String(value||'').trim().toLocaleLowerCase('fr');const m=v.match(/^(6e|5e|4e|3e|2nde|seconde|1ere|1re|premiere|terminale|tle|tle|[0-9]+e)/i);return m?m[1].replace('seconde','2nde').replace('premiere','1ere').replace('tle','terminale'):((v.split(/[ \-]/)[0])||'Autres')}
+function calculateAge(s){if(!s.naissance)return null;const d=new Date(s.naissance+'T00:00:00');if(Number.isNaN(d.getTime()))return null;const now=new Date();let a=now.getFullYear()-d.getFullYear();if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate()))a--;return a}
+function populateAnalysisClasses(){
+ const students=getStudents(),classSel=$('analysisClass'),groupSel=$('analysisGroup'),fatherSel=$('analysisFather');
+ const oldClass=classSel.value,oldGroup=groupSel.value,oldFather=fatherSel.value;
+ classSel.replaceChildren(new Option('Toutes les classes',''));
+ [...new Set(students.map(s=>(s.classe||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')).forEach(c=>classSel.add(new Option(c,c)));
+ classSel.value=oldClass;
+ groupSel.replaceChildren(new Option('Tous les groupes',''));
+ [...new Set(students.map(s=>classGroup(s.classe)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')).forEach(g=>groupSel.add(new Option(g,g)));
+ groupSel.value=oldGroup;
+ fatherSel.replaceChildren(new Option('Toutes les professions',''));
+ [...new Set(students.map(s=>(s.professionPere||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')).forEach(v=>fatherSel.add(new Option(v,v)));
+ fatherSel.value=oldFather;
+}
+function renderAnalysisResults(){
+ const students=getStudents();
+ const group=$('analysisGroup').value,cl=$('analysisClass').value,ageVal=$('analysisAge').value,condition=$('analysisAgeCondition').value;
+ const filters={sexe:$('analysisSex').value,statut:$('analysisStatus').value,professionPere:$('analysisFather').value,handicape:$('analysisHandicap').value,orphelin:$('analysisOrphan').value,edi:$('analysisEdi').value,boursier:$('analysisScholar').value,parraine:$('analysisSponsored').value,vulnerable:$('analysisVulnerable').value};
+ const compare=(a,b,op)=>op==='='?a===b:op==='>'?a>b:op==='<'?a<b:op==='>='?a>=b:a<=b;
+ filteredAnalysisRows=students.filter(s=>{
+   if(group&&classGroup(s.classe)!==group)return false;
+   if(cl&&s.classe!==cl)return false;
+   for(const [k,v] of Object.entries(filters))if(v&&String(s[k]??'')!==v)return false;
+   if(ageVal!==''){const age=calculateAge(s);if(age===null||!compare(age,Number(ageVal),condition))return false;}
+   return true;
+ });
+ $('analysisTotal').textContent='TOTAL : '+filteredAnalysisRows.length+' élève'+(filteredAnalysisRows.length>1?'s':'');
+ const list=$('analysisResults');list.replaceChildren();
+ if(!filteredAnalysisRows.length){list.textContent='Aucun élève ne correspond à ces critères.';return}
+ filteredAnalysisRows.sort((a,b)=>(a.nom||'').localeCompare(b.nom||'','fr')||(a.prenom||'').localeCompare(b.prenom||'','fr'));
+ filteredAnalysisRows.forEach(s=>{
+   const card=document.createElement('div');card.className='analysis-result';
+   const avatar=document.createElement('span');avatar.className='filter-avatar';avatar.textContent=(s.nom||'?').slice(0,1).toLocaleUpperCase('fr');
+   const body=document.createElement('div');body.className='filter-result-body';
+   const strong=document.createElement('strong');strong.textContent=((s.nom||'')+' '+(s.prenom||'')).trim();
+   const meta=document.createElement('div');meta.textContent='Classe : '+(s.classe||'Non précisée');
+   const sex=document.createElement('div');sex.textContent='Sexe : '+(s.sexe||'Non précisé');
+   const age=document.createElement('div');const a=calculateAge(s);age.textContent='Âge : '+(a===null?'Non précisé':a+' ans');
+   body.append(strong,meta,sex,age);card.append(avatar,body);list.append(card);
+ });
+}
+['analysisGroup','analysisClass','analysisAge','analysisAgeCondition','analysisSex','analysisStatus','analysisFather','analysisHandicap','analysisOrphan','analysisEdi','analysisScholar','analysisSponsored','analysisVulnerable'].forEach(id=>$(id).addEventListener('change',renderAnalysisResults));
+$('analysisAge').addEventListener('input',renderAnalysisResults);
+$('resetAnalysis').addEventListener('click',()=>{['analysisGroup','analysisClass','analysisSex','analysisStatus','analysisFather','analysisHandicap','analysisOrphan','analysisEdi','analysisScholar','analysisSponsored','analysisVulnerable'].forEach(id=>$(id).value='');$('analysisAge').value='';$('analysisAgeCondition').value='=';populateAnalysisClasses();renderAnalysisResults()});
+function downloadJSON(data,filename){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('exportFullBackup').addEventListener('click',()=>downloadJSON({exportedAt:new Date().toISOString(),students:getStudents(),daily:getDaily(),archives:getArchives(),configuration:getConfiguration()},'KAM_Educateur_Sauvegarde_complete.json'));
+
+// Domaine 5 — Administration
+const administrationModule=$('administrationModule');
+function fullBackupObject(){return {app:'KAM Éducateur',version:'3.0',exportedAt:new Date().toISOString(),students:getStudents(),daily:getDaily(),archives:getArchives(),configuration:getConfiguration(),users:JSON.parse(localStorage.getItem('kam_users_v1')||'[]')}}
+// Code d'autorisation hors ligne : contrôle pratique, non cryptographique.
+function kamCode(name,role){let x=2166136261;const raw=('KAM-EDU-2026|'+name.trim().toUpperCase()+'|'+role).normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(let i=0;i<raw.length;i++){x^=raw.charCodeAt(i);x=Math.imul(x,16777619)}return 'KAM-'+(x>>>0).toString(16).toUpperCase().padStart(8,'0')}
+function kamUsers(){try{return JSON.parse(localStorage.getItem('kam_users_v1')||'[]')}catch(e){return []}}
+function saveKamUsers(v){localStorage.setItem('kam_users_v1',JSON.stringify(v))}
+function openAdminPanel(which){
+  administrationModule.classList.remove('hidden');$('toolsCard').classList.add('hidden');studentModule.classList.add('hidden');dailyModule.classList.add('hidden');analysisModule.classList.add('hidden');$('configurationModule').classList.add('hidden');
+  $('adminMenu').classList.add('hidden');$('adminContent').classList.remove('hidden');$('adminBack').classList.remove('hidden');
+  const box=$('adminContent');box.replaceChildren();
+  const add=(tag,txt,cls)=>{const el=document.createElement(tag);el.textContent=txt;if(cls)el.className=cls;box.append(el);return el};
+  const action=(txt,fn,cls='primary-btn')=>{const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=txt;b.addEventListener('click',fn);box.append(b);return b};
+  const note=txt=>add('p',txt,'notice');
+  const heading={users:'Utilisateurs',imports:'Importations',license:'Licence',backup:'Sauvegarde des données',critical:'Opérations décisives'}[which]||'Administration';$('adminTitle').textContent=heading;$('adminDesc').textContent='Administration de KAM Éducateur';
+  if(which==='users'){add('h3','Créer un code d’autorisation');note('Saisissez le nom de l’éducateur et son rôle. Communiquez-lui le code généré par un moyen de votre choix. Il devra saisir exactement le même nom et le code dans la rubrique Licence sur son téléphone.');const nm=add('label','Nom complet');const name=document.createElement('input');name.type='text';name.placeholder='Nom de l’éducateur';name.autocomplete='off';nm.append(name);const rl=add('label','Rôle');const role=document.createElement('select');[['educateur','Éducateur'],['consultation','Consultation seulement'],['admin','Administrateur']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;role.append(o)});rl.append(role);const code=add('p','Code : —','notice');action('Générer le code',()=>{if(!name.value.trim()){code.textContent='Saisissez le nom complet.';return}const c=kamCode(name.value,role.value);code.textContent='Code à transmettre : '+c;const arr=kamUsers();if(!arr.some(u=>u.name.toLowerCase()===name.value.trim().toLowerCase()))arr.push({name:name.value.trim(),role:role.value,code:c,issuedAt:new Date().toISOString()});saveKamUsers(arr)});add('h3','Autorisations enregistrées sur cet appareil');const list=add('div','','notice');const draw=()=>{list.replaceChildren();kamUsers().forEach(u=>{const row=add('div',u.name+' — '+u.role+' — '+u.code,'daily-record');const del=document.createElement('button');del.type='button';del.className='secondary-btn';del.textContent='Retirer';del.onclick=()=>{saveKamUsers(kamUsers().filter(x=>x.code!==u.code));draw()};row.append(del)})};draw();note('Important : cette liste reste sur ce téléphone. Pour un autre téléphone, transmettez le code manuellement. Ce mécanisme est une autorisation hors ligne simple, pas une protection cryptographique contre une personne qui sait modifier le fichier HTML.');}
+  if(which==='imports'){
+    add('h3','Type d’importation');
+    const card=add('div','','admin-import-card');
+    const lab=add('label','Données à importer');
+    const select=document.createElement('select');
+    [['classes','Classes']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;select.append(o)});
+    lab.append(select);card.append(lab);
+    add('p','Import des classes et de leurs correspondances.','notice');
+    const format=add('div','','admin-import-card');
+    add('h3','Format attendu');
+    add('p','Le fichier doit être au format .xlsx.');
+    add('p','Feuille : « Classes ».');
+    add('p','Colonnes obligatoires :');
+    add('p','Classe | Classe suivante | Active');
+    const choose=action('⇧  CHOISIR UN FICHIER EXCEL',()=>inp.click(),'secondary-btn');
+    const inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';inp.hidden=true;box.append(inp);
+    const msg=add('p','','notice');
+    async function readXlsx(file){
+      if(typeof DecompressionStream==='undefined')throw Error('Votre navigateur ne permet pas de lire ce fichier Excel hors connexion.');
+      const buf=await file.arrayBuffer(),dv=new DataView(buf);let eocd=-1;
+      for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65558);i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}}
+      if(eocd<0)throw Error('Fichier Excel .xlsx invalide.');
+      const count=dv.getUint16(eocd+10,true),cd=dv.getUint32(eocd+16,true);const entries={};let pos=cd;
+      for(let i=0;i<count;i++){if(dv.getUint32(pos,true)!==0x02014b50)throw Error('Archive Excel invalide.');const method=dv.getUint16(pos+10,true),size=dv.getUint32(pos+20,true),nl=dv.getUint16(pos+28,true),el=dv.getUint16(pos+30,true),cl=dv.getUint16(pos+32,true),off=dv.getUint32(pos+42,true),name=new TextDecoder().decode(new Uint8Array(buf,pos+46,nl));entries[name]={method,size,off};pos+=46+nl+el+cl}
+      async function entry(name){const z=entries[name];if(!z)throw Error('Élément Excel manquant : '+name);const n=dv.getUint16(z.off+26,true),e=dv.getUint16(z.off+28,true),a=z.off+30+n+e,raw=buf.slice(a,a+z.size);if(z.method===0)return new TextDecoder().decode(raw);if(z.method!==8)throw Error('Compression Excel non prise en charge.');const stream=new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return await new Response(stream).text()}
+      const parser=new DOMParser(),wb=parser.parseFromString(await entry('xl/workbook.xml'),'application/xml'),rels=parser.parseFromString(await entry('xl/_rels/workbook.xml.rels'),'application/xml');
+      const sh=[...wb.getElementsByTagName('sheet')].find(x=>x.getAttribute('name')==='Classes');if(!sh)throw Error('La feuille « Classes » est introuvable.');const rid=sh.getAttribute('r:id'),rel=[...rels.getElementsByTagName('Relationship')].find(x=>x.getAttribute('Id')===rid);if(!rel)throw Error('Référence de feuille Excel invalide.');let target=rel.getAttribute('Target').replace(/^\//,'');if(!target.startsWith('xl/'))target='xl/'+target;target=target.replace(/^xl\/\.\.\//,'');
+      let strings=[];if(entries['xl/sharedStrings.xml']){const ss=parser.parseFromString(await entry('xl/sharedStrings.xml'),'application/xml');strings=[...ss.getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent).join(''))}
+      const xml=parser.parseFromString(await entry(target),'application/xml');return [...xml.getElementsByTagName('row')].map(row=>[...row.getElementsByTagName('c')].map(c=>{const v=c.getElementsByTagName('v')[0]?.textContent||'',t=c.getAttribute('t');if(t==='s')return strings[Number(v)]||'';if(t==='inlineStr')return [...c.getElementsByTagName('t')].map(x=>x.textContent).join('');return v}));
+    }
+    inp.addEventListener('change',async()=>{const f=inp.files[0];if(!f)return;try{const rows=await readXlsx(f);if(!rows.length)throw Error('La feuille Classes est vide.');const norm=x=>String(x||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const heads=rows[0].map(norm),idx=[heads.indexOf('classe'),heads.indexOf('classe suivante'),heads.indexOf('active')];if(idx.some(x=>x<0))throw Error('Colonnes obligatoires manquantes : Classe, Classe suivante, Active.');const data=rows.slice(1).map(r=>({classe:String(r[idx[0]]||'').trim(),suivante:String(r[idx[1]]||'').trim(),active:/^(oui|true|1|actif|active)$/i.test(String(r[idx[2]]||'').trim())})).filter(x=>x.classe);if(!data.length)throw Error('Aucune classe valide trouvée dans le fichier.');if(!confirm('Importer '+data.length+' classe(s) et leurs correspondances ?'))return;const cfg=getConfiguration();cfg.classes=data.map(x=>x.classe);saveConfiguration(cfg);localStorage.setItem('kam_class_correspondences_v1',JSON.stringify(data));msg.textContent=data.length+' classe(s) importée(s) avec leurs correspondances. Les paramètres sont enregistrés sur cet appareil.';}catch(e){msg.textContent='Import impossible : '+(e.message||'vérifiez le fichier Excel et son format.')}finally{inp.value=''}});
+    note('L’importation fonctionne sans connexion Internet. Elle met à jour les classes et conserve les correspondances dans les données locales de cet appareil.');
+  }
+  if(which==='license'){
+    add('h3','Licence KAM Éducateur');
+    const read=(k,def)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(def))}catch(e){return def}};
+    const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+    let lic=read('kam_license_v1',{}), registry=read('kam_license_registry_v1',[]);
+    if(!Array.isArray(registry))registry=[];
+    const status=add('p','');status.innerHTML='<strong>État de la licence</strong>';
+    const state=add('p','');const typeLine=add('p','');const expiryLine=add('p','');
+    const refresh=()=>{lic=read('kam_license_v1',{});state.textContent='État : '+(lic.active?'Activé':'Désactivé');typeLine.textContent='Type : '+(lic.type||'Non défini');expiryLine.textContent='Date d’expiration : '+(lic.type==='Définitif'?'Aucune':(lic.expiry||'Non définie'));};refresh();
+    const keyTitle=add('p','');keyTitle.innerHTML='<strong>Clé de la licence</strong>';
+    const entryLabel=add('label','Saisir la clé');const keyInput=document.createElement('input');keyInput.type='text';keyInput.placeholder='Saisir la clé de licence';keyInput.autocomplete='off';keyInput.value=lic.key||'';entryLabel.append(keyInput);
+    const msg=add('p',lic.active?'Licence activée sur cet appareil.':'La licence est désactivée. Saisissez une clé valide.','notice');
+    const activate=action('ACTIVER LA LICENCE',()=>{
+      const key=keyInput.value.trim().toUpperCase();if(!key){msg.textContent='Veuillez saisir la clé de licence.';keyInput.focus();return;}
+      registry=read('kam_license_registry_v1',[]);if(!Array.isArray(registry))registry=[];
+      const item=registry.find(x=>String(x.key||'').toUpperCase()===key);
+      if(!item){msg.textContent='Clé inconnue sur cet appareil. Importez d’abord le fichier d’autorisations fourni par l’administrateur.';return;}
+      if(item.status!=='Activé'){msg.textContent='Cette clé a été désactivée par l’administrateur.';return;}
+      if(item.type==='Temporaire'&&(!item.expiry||item.expiry<new Date().toISOString().slice(0,10))){msg.textContent='Cette licence temporaire a expiré.';return;}
+      lic={active:true,key:item.key,type:item.type,expiry:item.expiry||'',activatedAt:new Date().toISOString()};save('kam_license_v1',lic);refresh();msg.textContent='Licence activée sur cet appareil.';
+    },'primary-btn');activate.style.fontWeight='800';activate.style.width='100%';
+    add('h3','Importer un fichier d’autorisations');
+    note('L’administrateur doit vous transmettre le fichier JSON des autorisations. Importez-le ici avant de saisir votre clé.');
+    const importInput=document.createElement('input');importInput.type='file';importInput.accept='.json,application/json';box.append(importInput);
+    action('IMPORTER LE FICHIER D’AUTORISATIONS (JSON)',async()=>{const f=importInput.files&&importInput.files[0];if(!f){msg.textContent='Sélectionnez le fichier JSON reçu de l’administrateur.';return;}try{const data=JSON.parse(await f.text());if(data.app!=='KAM Éducateur Licences'||!Array.isArray(data.licenses))throw Error('Format de fichier non reconnu.');registry=data.licenses.filter(x=>x&&x.key&&['Temporaire','Définitif'].includes(x.type));save('kam_license_registry_v1',registry);msg.textContent=registry.length+' autorisation(s) importée(s). Vous pouvez saisir votre clé.';}catch(e){msg.textContent='Import impossible : '+e.message;}},'secondary-btn');
+    const adminMarker=document.createElement('div');adminMarker.id='kamAdminProtectedStart';box.append(adminMarker);
+    add('h3','Administration — générer les clés');
+    note('Zone réservée à l’administrateur. Définissez un mot de passe personnel sur cet appareil. Ne le communiquez pas aux éducateurs.');
+    const typeLabel=add('label','Type de licence');const typeSelect=document.createElement('select');[['Temporaire','Temporaire'],['Définitif','Définitif']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;typeSelect.append(o)});typeLabel.append(typeSelect);
+    const dateLabel=add('label','Date d’expiration (licence temporaire)');const dateInput=document.createElement('input');dateInput.type='date';dateInput.min=new Date().toISOString().slice(0,10);dateLabel.append(dateInput);typeSelect.addEventListener('change',()=>{dateLabel.style.display=typeSelect.value==='Définitif'?'none':''});
+    const generated=add('p','Clé générée : aucune','notice');
+    const drawRegistry=()=>{registry=read('kam_license_registry_v1',[]);if(!Array.isArray(registry))registry=[];const old=box.querySelector('#kamLicenseList');if(old)old.remove();const list=document.createElement('div');list.id='kamLicenseList';box.append(list);registry.forEach((it,i)=>{const row=document.createElement('div');row.className='daily-record';row.textContent=it.key+' — '+it.type+(it.expiry?' — expire le '+it.expiry:'')+' — '+it.status+' ';const b=document.createElement('button');b.type='button';b.className='secondary-btn';b.textContent=it.status==='Activé'?'Désactiver':'Réactiver';b.addEventListener('click',()=>{registry[i].status=registry[i].status==='Activé'?'Désactivé':'Activé';save('kam_license_registry_v1',registry);drawRegistry()});row.append(b);list.append(row);});};
+    action('GÉNÉRER UNE CLÉ',()=>{if(typeSelect.value==='Temporaire'&&!dateInput.value){msg.textContent='Choisissez une date d’expiration.';dateInput.focus();return;}const bytes=new Uint8Array(15);if(!crypto||!crypto.getRandomValues){msg.textContent='Génération indisponible dans ce navigateur.';return;}crypto.getRandomValues(bytes);const raw=Array.from(bytes,x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();const key=raw.match(/.{1,5}/g).join('-');registry=read('kam_license_registry_v1',[]);if(!Array.isArray(registry))registry=[];registry.push({key,type:typeSelect.value,expiry:typeSelect.value==='Temporaire'?dateInput.value:'',status:'Activé',createdAt:new Date().toISOString()});save('kam_license_registry_v1',registry);generated.textContent='Clé générée : '+key;drawRegistry();},'primary-btn');
+    action('EXPORTER LE FICHIER D’AUTORISATIONS POUR LES AUTRES TÉLÉPHONES',()=>{registry=read('kam_license_registry_v1',[]);downloadJSON({app:'KAM Éducateur Licences',version:1,exportedAt:new Date().toISOString(),licenses:registry},'KAM_Educateur_Autorisations.json');},'secondary-btn');
+    drawRegistry();
+    // Verrou local de l’interface administrateur : empreinte PBKDF2, jamais le mot de passe en clair.
+    const protectedNodes=[];let node=adminMarker.nextSibling;while(node){const next=node.nextSibling;protectedNodes.push(node);node.remove();node=next;}
+    const gate=document.createElement('section');gate.className='daily-record';gate.style.marginTop='14px';
+    const gateTitle=document.createElement('h3');gateTitle.textContent='Accès administrateur protégé';gate.append(gateTitle);
+    const gateInfo=document.createElement('p');gateInfo.className='notice';gate.append(gateInfo);
+    const passLabel=document.createElement('label');passLabel.textContent='Mot de passe administrateur';const passInput=document.createElement('input');passInput.type='password';passInput.autocomplete='new-password';passInput.placeholder='Créer ou saisir le mot de passe';passLabel.append(passInput);gate.append(passLabel);
+    const confirmLabel=document.createElement('label');confirmLabel.textContent='Confirmer le mot de passe';const confirmInput=document.createElement('input');confirmInput.type='password';confirmInput.autocomplete='new-password';confirmInput.placeholder='Confirmer le mot de passe';confirmLabel.append(confirmInput);gate.append(confirmLabel);
+    const gateMsg=document.createElement('p');gateMsg.className='notice';gate.append(gateMsg);
+    const gateBtn=document.createElement('button');gateBtn.type='button';gateBtn.className='primary-btn';gateBtn.textContent='DÉFINIR LE MOT DE PASSE';gate.append(gateBtn);
+    const adminContent=document.createElement('div');adminContent.hidden=true;protectedNodes.forEach(n=>adminContent.append(n));
+    box.append(gate,adminContent);
+    const credentialKey='kam_admin_credential_v1';
+    const getCredential=()=>{try{return JSON.parse(localStorage.getItem(credentialKey)||'null')}catch(e){return null}};
+    const deriveAdminHash=async(password,salt)=>{if(!crypto?.subtle)throw Error('Le navigateur ne permet pas le chiffrement requis. Ouvrez le fichier avec une version récente de Chrome.');const enc=new TextEncoder();const material=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:Uint8Array.from(atob(salt),c=>c.charCodeAt(0)),iterations:210000,hash:'SHA-256'},material,256);return btoa(String.fromCharCode(...new Uint8Array(bits)));};
+    const b64bytes=a=>btoa(String.fromCharCode(...a));
+    const refreshGate=()=>{const c=getCredential();confirmLabel.hidden=!!c;gateBtn.textContent=c?'DÉVERROUILLER L’ADMINISTRATION':'DÉFINIR LE MOT DE PASSE';gateInfo.textContent=c?'Entrez le mot de passe pour afficher les outils de génération et de gestion des clés.':'Première utilisation : créez ici le mot de passe administrateur. Il sera enregistré uniquement sur cet appareil.';};refreshGate();
+    gateBtn.addEventListener('click',async()=>{gateBtn.disabled=true;const password=passInput.value;if(password.length<8){gateMsg.textContent='Utilisez au moins 8 caractères.';gateBtn.disabled=false;return;}try{let c=getCredential();if(!c){if(password!==confirmInput.value){gateMsg.textContent='Les deux mots de passe ne correspondent pas.';gateBtn.disabled=false;return;}const salt=new Uint8Array(16);crypto.getRandomValues(salt);const salt64=b64bytes(salt);const hash=await deriveAdminHash(password,salt64);const record={salt:salt64,hash,iterations:210000,algorithm:'PBKDF2-SHA-256'};localStorage.setItem(credentialKey,JSON.stringify(record));c=getCredential();if(!c||c.hash!==hash)throw Error('Le navigateur n’a pas conservé le mot de passe. Essayez d’ouvrir le fichier dans Chrome et non dans un aperçu.');}else{const hash=await deriveAdminHash(password,c.salt);if(hash!==c.hash){gateMsg.textContent='Mot de passe incorrect.';passInput.value='';gateBtn.disabled=false;return;}}adminContent.hidden=false;gate.remove();const success=document.createElement('p');success.className='notice';success.textContent='Accès administrateur autorisé. Les outils de gestion des clés sont déverrouillés.';adminContent.prepend(success);passInput.value='';confirmInput.value='';}catch(e){gateMsg.textContent=e.message||'Impossible de vérifier le mot de passe.';gateBtn.disabled=false;}});
+    note('Sécurité : ce verrou protège l’accès ordinaire à l’interface, mais un fichier HTML modifiable ne peut pas garantir à lui seul une protection inviolable. Les clés actuelles sont encore dans un registre JSON local non signé. Pour empêcher la fabrication de fausses licences, une étape supplémentaire de signature cryptographique avec une clé privée conservée séparément est nécessaire.');
+  }
+  if(which==='backup'){add('h3','Sauvegarde complète');note('La sauvegarde rassemble les fiches élèves, le suivi quotidien, les archives scolaires et les paramètres. Conservez le fichier JSON dans un autre emplacement (téléphone, ordinateur ou clé USB).');action('Télécharger la sauvegarde complète',()=>downloadJSON(fullBackupObject(),'KAM_Educateur_Sauvegarde_complete.json'));}
+  if(which==='critical'){add('h3','Opérations décisives');note('Ces actions peuvent modifier ou supprimer des données. Faites une sauvegarde complète avant toute restauration ou réinitialisation.');const lab=add('label','Restaurer une sauvegarde complète (JSON)');const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';lab.append(inp);const msg=add('p','','notice');action('Restaurer la sauvegarde sélectionnée',async()=>{const f=inp.files[0];if(!f){msg.textContent='Sélectionnez un fichier JSON.';return}try{const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.students)||!Array.isArray(o.daily))throw Error('format');if(!confirm('Remplacer les données actuelles par cette sauvegarde ? Cette action ne peut pas être annulée.'))return;saveStudents(o.students);saveDaily(o.daily);if(Array.isArray(o.archives))saveArchives(o.archives);if(o.configuration)saveConfiguration({...defaultConfiguration(),...o.configuration});msg.textContent='Restauration terminée. Rechargez la page.'}catch(e){msg.textContent='Fichier de sauvegarde invalide.'}},'primary-btn');action('Effacer toutes les données locales de KAM Éducateur',()=>{if(!confirm('ATTENTION : supprimer les élèves, suivis, archives et paramètres enregistrés sur cet appareil ? Cette action est irréversible sans sauvegarde.'))return;if(!confirm('Dernière confirmation : toutes les données locales seront effacées. Continuer ?'))return;[storageKey,dailyStorageKey,archiveStorageKey,configurationKey,'kam_users_v1','kam_profile_v1'].forEach(k=>localStorage.removeItem(k));msg.textContent='Les données locales de KAM Éducateur ont été effacées. Rechargez la page.'},'secondary-btn');}
+  administrationModule.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showAdminMenu(){administrationModule.classList.add('hidden');$('toolsCard').classList.remove('hidden');$('adminMenu').classList.remove('hidden');$('adminContent').classList.add('hidden');$('adminBack').classList.add('hidden');$('adminTitle').textContent='Administration';$('adminDesc').textContent='Gestion administrative de KAM Éducateur';}
+$('adminBack').addEventListener('click',showAdminMenu);$('closeAdmin').addEventListener('click',showAdminMenu);
+$('exportAnalysis').addEventListener('click',()=>{
+ const cols=['Nom','Prénom','Classe','Sexe','Date de naissance','Âge','Statut','Profession du père','Handicap','Orphelin','EDI','Boursier','Parrainé','Vulnérable','Nationalité','Décision de fin d’année','Profession de la mère','Référence extrait','Téléphone parents'];
+ const keys=['nom','prenom','classe','sexe','naissance','_age','statut','professionPere','handicape','orphelin','edi','boursier','parraine','vulnerable','nationalite','decision','professionMere','referenceExtrait','numeroParents'];
+ const esc=v=>'"'+String(v??'').replace(/"/g,'""').replace(/[\r\n]/g,' ')+'"';
+ const rows=[cols.map(esc).join(';'),...filteredAnalysisRows.map(s=>keys.map(k=>esc(k==='_age'?(calculateAge(s)??''):s[k])).join(';'))];
+ const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'application/vnd.ms-excel;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='KAM_Educateur_Statistiques_Eleves.xls';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+$('menuBtn').addEventListener('click',()=>alert('Menu de démonstration. Les options seront ajoutées après validation du tableau de bord.'));
+
+// Formulaire Incidents conforme aux écrans fournis.
+const incidentGroups=[
+ {key:'violence',title:'Violence',options:['Aucun','Physique','Verbale','Autres']},
+ {key:'crise',title:'Crise',options:['Aucun','Hystérie/Fugue','Epilepsie','Asthme','Folie','Autres']},
+ {key:'intrusion',title:'Intrusion',options:['Aucun','Individu(s) dangereux','Parent(s) belliqueux/remonté(s)','Animaux dangereux','Insectes dangereux',"Incursion d'individus armés",'Autres']},
+ {key:'manquement',title:'Manquement',options:['Aucun','Outrage','Violence','Menace',"refus d'obéir",'Autres']},
+ {key:'autresIncidences',title:'Autres incidences',options:['Aucun','Absence prolongée',"Vol/destruction de cahier d'absence",'Cas de vol','Cas de perte de biens matériels',"Cas de possession/apport d'armes blanches","Cas de possession/apport/consommation (intitulé tronqué sur le modèle)",'Destruction/dommages de biens publics','Harcèlement/attouchements sexuels','Viol ou tentative','Autres']}
+];
+function incidentInput(label,name,type='text',required=false){const wrap=document.createElement('label');wrap.textContent=label+(required?' *':'');const el=document.createElement(type==='textarea'?'textarea':'input');if(type!=='textarea')el.type=type;el.name=name;el.required=required;wrap.append(el);return wrap}
+function incidentChoiceGroup(group){const card=document.createElement('section');card.className='incident-card';const h=document.createElement('h3');h.textContent=group.title;card.append(h);const opts=document.createElement('div');opts.className='incident-options';group.options.forEach((option,i)=>{const lab=document.createElement('label');lab.className='incident-choice';const input=document.createElement('input');input.type='checkbox';input.name=group.key;input.value=option;if(i===0)input.checked=true;input.addEventListener('change',()=>{if(i===0&&input.checked){opts.querySelectorAll('input').forEach(x=>{if(x!==input)x.checked=false})}else if(input.checked){const none=opts.querySelector('input');if(none)none.checked=false}});lab.append(input,document.createTextNode(option));opts.append(lab)});card.append(opts);return card}
+function renderIncidentForm(){const host=$('dailyFields');host.replaceChildren();const studentCard=document.createElement('section');studentCard.className='incident-card';const sh=document.createElement('h3');sh.textContent='Élève concerné';const hint=document.createElement('p');hint.textContent='Facultatif : certains incidents peuvent ne concerner aucun élève précis.';const search=document.createElement('input');search.type='text';search.id='incidentStudentSearch';search.placeholder='⌕  Élève';search.autocomplete='off';search.style.width='100%';search.style.padding='16px';search.style.border='1.5px solid #85838f';search.style.borderRadius='8px';search.style.background='transparent';search.style.font='inherit';const suggestions=document.createElement('div');suggestions.id='incidentStudentSuggestions';suggestions.className='incident-student-suggestions';suggestions.hidden=true;studentCard.append(sh,hint,search,suggestions);host.append(studentCard);
+ const studentMeta=document.createElement('input');studentMeta.type='hidden';studentMeta.name='studentId';studentCard.append(studentMeta);const studentName=document.createElement('input');studentName.type='hidden';studentName.name='studentName';studentCard.append(studentName);const studentClass=document.createElement('input');studentClass.type='hidden';studentClass.name='studentClass';studentCard.append(studentClass);
+ search.addEventListener('input',()=>{const q=search.value.trim().toLocaleLowerCase('fr');studentMeta.value='';studentName.value='';studentClass.value='';suggestions.replaceChildren();if(!q){suggestions.hidden=true;return}const matches=getStudents().filter(x=>[x.nom,x.prenom,x.classe].some(v=>(v||'').toLocaleLowerCase('fr').includes(q))).slice(0,8);matches.forEach(st=>{const b=document.createElement('button');b.type='button';b.textContent=((st.nom||'')+' '+(st.prenom||'')+' — '+(st.classe||'Classe non précisée')).trim();b.addEventListener('click',()=>{search.value=((st.nom||'')+' '+(st.prenom||'')).trim()+' — '+(st.classe||'');studentMeta.value=st.id||'';studentName.value=((st.nom||'')+' '+(st.prenom||'')).trim();studentClass.value=st.classe||'';suggestions.hidden=true});suggestions.append(b)});suggestions.hidden=false;if(!matches.length){const p=document.createElement('p');p.textContent='Aucun élève correspondant dans Inscription.';suggestions.append(p)}});
+ const nature=document.createElement('h3');nature.className='form-heading';nature.textContent='Nature de l’incident';host.append(nature);
+ const basic=document.createElement('section');basic.className='incident-card';[['Abandon','abandon'],['Grossesse','grossesse']].forEach(([label,name])=>{const lab=document.createElement('label');lab.className='incident-choice';const cb=document.createElement('input');cb.type='checkbox';cb.name='nature';cb.value=label;lab.append(cb,document.createTextNode(label));basic.append(lab)});host.append(basic);
+ incidentGroups.forEach(g=>host.append(incidentChoiceGroup(g)));
+ const info=document.createElement('section');info.className='incident-card';const title=document.createElement('h3');title.textContent='Informations complémentaires';info.append(title);info.append(incidentInput('Date du constat','date','date',true));info.append(incidentInput('Auteur','auteur'));info.append(incidentInput('Victime','victime'));info.append(incidentInput('Raisons / circonstances','raisons','textarea'));info.append(incidentInput('Manifestations','manifestations','textarea'));info.append(incidentInput('Conséquences','consequences','textarea'));info.append(incidentInput('Gestion / mesures prises','gestion','textarea'));host.append(info);
+ const date=info.querySelector('[name="date"]');date.value=new Date().toISOString().slice(0,10);
+}
+function restoreIncidentForm(data){const host=$('dailyFields');Object.entries(data||{}).forEach(([key,value])=>{const els=host.querySelectorAll('[name="'+CSS.escape(key)+'"]');if(!els.length)return;if(els[0].type==='checkbox'){const values=Array.isArray(value)?value:[value];els.forEach(el=>el.checked=values.includes(el.value));}else els[0].value=value||''});const nm=host.querySelector('[name="studentName"]');const cl=host.querySelector('[name="studentClass"]');const search=$('incidentStudentSearch');if(search&&nm&&nm.value)search.value=nm.value+(cl&&cl.value?' — '+cl.value:'')}
+
+// Écran dédié « Absences avisées », calqué sur le modèle fourni.
+let aviseeSelectedStudent=null;
+function openDailyModule(type){
+ dailyType=type;dailyEditingId=null;dailyForm.reset();
+ const isAvisee=type==='avisee',isIncident=type==='incident';
+ $('absenceDirectory').classList.toggle('hidden',type!=='absence');
+ $('aviseePage').classList.toggle('hidden',!isAvisee);
+ $('aviseeModalBackdrop').classList.add('hidden');$('absenceBack').classList.add('hidden');
+ dailyForm.classList.toggle('hidden',type==='absence'||isAvisee);
+ $('dailyModule').querySelector('.saved-section').classList.toggle('hidden',type==='absence'||isAvisee);
+ $('dailyModuleTitle').textContent=dailyTypes[type].title;$('dailyModuleDesc').textContent=dailyTypes[type].desc;
+ $('dailyFields').replaceChildren();$('dailyMessage').textContent='';$('dailySave').textContent=isIncident?'Enregistrer l’incident':'Enregistrer';
+ $('dailyModule').classList.toggle('incident-mode',isIncident);
+ dailyModule.classList.remove('hidden');studentModule.classList.add('hidden');
+ if(type==='absence')renderAbsenceStudents();if(isAvisee)renderAviseeList();
+ if(isIncident){renderIncidentForm();$('dailySave').parentElement.classList.add('incident-savebar');$('dailyReset').classList.add('hidden');}
+ else { $('dailySave').parentElement.classList.remove('incident-savebar');$('dailyReset').classList.remove('hidden');if(type!=='absence'&&!isAvisee){dailyTypes[type].fields.forEach(f=>{const lab=document.createElement('label');lab.textContent=f[1]+(f[3]?' *':'');let el;if(f[2]==='textarea')el=document.createElement('textarea');else if(f[2]==='select'){el=document.createElement('select');(f[4]||[]).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.append(o)})}else{el=document.createElement('input');el.type=f[2];if(f[2]==='number'){el.min='0';el.step='0.5'}}el.name=f[0];el.required=!!f[3];lab.append(el);$('dailyFields').append(lab)});renderDailyList();}}
+ renderDailyList();dailyModule.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderAviseeList(){const rows=getDaily().filter(r=>r.type==='avisee');const list=$('aviseeList');list.replaceChildren();$('aviseeEmpty').classList.toggle('hidden',rows.length>0);rows.sort((a,b)=>(b.created||'').localeCompare(a.created||''));rows.forEach(r=>{const d=r.data||{},card=document.createElement('div');card.className='avisee-record';const info=document.createElement('div');const strong=document.createElement('strong');strong.textContent=d.studentName||'Élève';const details=document.createElement('div');details.textContent=[d.period,d.reason,d.noticeDate?'Avis : '+d.noticeDate:'',d.returnDate?'Retour : '+d.returnDate:''].filter(Boolean).join(' · ');info.append(strong,details);const actions=document.createElement('div');const del=document.createElement('button');del.type='button';del.textContent='Supprimer';del.className='secondary-btn';del.addEventListener('click',()=>{if(confirm('Supprimer cette absence avisée ?')){saveDaily(getDaily().filter(x=>x.id!==r.id));renderAviseeList()}});actions.append(del);card.append(info,actions);list.append(card)})}
+function showAviseeModal(){aviseeSelectedStudent=null;$('aviseeModalForm').reset();$('aviseeStudentInput').value='';$('aviseeNoticeDate').value=new Date().toISOString().slice(0,10);$('aviseeSuggestions').replaceChildren();$('aviseeSuggestions').style.display='none';$('aviseeModalBackdrop').classList.remove('hidden')}
+$('aviseeAdd').addEventListener('click',showAviseeModal);$('aviseeCancel').addEventListener('click',()=>$('aviseeModalBackdrop').classList.add('hidden'));
+$('aviseeStudentInput').addEventListener('input',()=>{const q=$('aviseeStudentInput').value.trim().toLocaleLowerCase('fr');aviseeSelectedStudent=null;const box=$('aviseeSuggestions');box.replaceChildren();if(!q){box.style.display='none';return}const rows=getStudents().filter(s=>((s.nom||'')+' '+(s.prenom||'')+' '+(s.classe||'')).toLocaleLowerCase('fr').includes(q)).slice(0,10);rows.forEach(s=>{const b=document.createElement('button');b.type='button';b.textContent=((s.nom||'')+' '+(s.prenom||'')+' — '+(s.classe||'Classe non précisée')).trim();b.addEventListener('click',()=>{aviseeSelectedStudent=s;$('aviseeStudentInput').value=((s.nom||'')+' '+(s.prenom||'')).trim()+' — '+(s.classe||'');box.style.display='none'});box.append(b)});if(!rows.length){const b=document.createElement('button');b.type='button';b.textContent='Aucun élève trouvé. Vérifiez la fiche dans Inscription.';box.append(b)}box.style.display='block'});
+$('aviseeModalForm').addEventListener('submit',e=>{e.preventDefault();if(!aviseeSelectedStudent){alert('Sélectionnez un élève dans les suggestions de recherche.');return}const data={studentId:aviseeSelectedStudent.id,studentName:((aviseeSelectedStudent.nom||'')+' '+(aviseeSelectedStudent.prenom||'')).trim(),classe:aviseeSelectedStudent.classe||'',reason:$('aviseeReason').value.trim(),period:$('aviseePeriod').value.trim(),noticeDate:$('aviseeNoticeDate').value,returnDate:$('aviseeReturnDate').value};const rows=getDaily();rows.push({id:String(Date.now())+'-'+Math.random().toString(36).slice(2,8),type:'avisee',data,created:new Date().toISOString()});try{saveDaily(rows);$('aviseeModalBackdrop').classList.add('hidden');renderAviseeList()}catch(err){alert('Enregistrement impossible. Vérifiez l’espace disponible du navigateur.')}});
+
+// Domaine 4 — Configuration scolaire et gestion des périodes
+const configurationKey='kamEducateurConfigurationV1';
+function defaultConfiguration(){return {annee:'',regime:'trimestre',classes:[],groupes:[],completedPeriods:0}}
+function getConfiguration(){try{return {...defaultConfiguration(),...(JSON.parse(localStorage.getItem(configurationKey)||'{}'))}}catch(e){return defaultConfiguration()}}
+function saveConfiguration(data){localStorage.setItem(configurationKey,JSON.stringify(data))}
+function periodLabels(regime){return regime==='semestre'?['Semestre 1','Semestre 2']:['Trimestre 1','Trimestre 2','Trimestre 3']}
+function updatePeriodPreview(){const r=$('configRegime').value;$('periodPreview').textContent=r==='semestre'?'Périodes : 1er semestre et 2e semestre.':'Périodes : 1er trimestre, 2e trimestre et 3e trimestre.';renderPeriodManager()}
+function renderPeriodManager(){const c=getConfiguration(),labels=periodLabels($('configRegime')?.value||c.regime),done=Math.min(Number(c.completedPeriods||0),labels.length),list=$('activePeriods');if(!list)return;list.replaceChildren();labels.forEach((label,i)=>{const card=document.createElement('div');card.className='period-card'+(i<done?' done':i===done?' active':'');const num=document.createElement('div');num.className='period-number';num.textContent=i<done?'✓':String(i+1);const body=document.createElement('div');body.style.flex='1';const title=document.createElement('strong');title.textContent=label;const sub=document.createElement('span');sub.textContent=i<done?'Période terminée':i===done?'Période active':'Période à venir';body.append(title,sub);const status=document.createElement('div');status.className='period-status';status.textContent=i<done?'✓':i===done?'●':'◷';card.append(num,body,status);list.append(card)});const finished=done>=labels.length;$('finishPeriodBtn').disabled=finished;$('finishPeriodBtn').textContent=finished?'Toutes les périodes sont terminées':'Terminer cette période et passer à la suivante';$('finishPeriodBtn').classList.toggle('secondary-btn',finished);$('finishPeriodBtn').classList.toggle('primary-btn',!finished);renderPeriodHistory(labels,done)}
+function renderPeriodHistory(labels,done){const box=$('periodHistory');if(!box)return;box.replaceChildren();if(!done){box.textContent='Aucune période terminée pour le moment.';return}const rows=getDaily();for(let i=0;i<done;i++){const label=labels[i],card=document.createElement('div');card.className='period-history-card';const h=document.createElement('h4');h.textContent=label;const periodRows=rows.filter(r=>r.periodIndex===i);const abs=periodRows.filter(r=>r.type==='absence'),pen=periodRows.filter(r=>r.type==='penalite');const p=document.createElement('p');p.textContent='Absences enregistrées : '+abs.length+' · Pénalités enregistrées : '+pen.length;const legacy=document.createElement('p');legacy.textContent=rows.some(r=>r.periodIndex===undefined)?'Les anciennes saisies effectuées avant cette version ne sont pas affectées automatiquement à une période.':'';card.append(h,p);if(legacy.textContent)card.append(legacy);const actions=document.createElement('div');actions.style.display='flex';actions.style.flexWrap='wrap';actions.style.gap='8px';const btn=document.createElement('button');btn.type='button';btn.className='secondary-btn';btn.textContent='Consulter les absences et pénalités';btn.addEventListener('click',()=>showPeriodHistory(i,label));actions.append(btn);const reopen=document.createElement('button');reopen.type='button';reopen.className='primary-btn';reopen.textContent='Réactiver cette période';reopen.addEventListener('click',()=>reactivatePeriod(i,label));actions.append(reopen);card.append(actions);box.append(card)}}
+function showPeriodHistory(index,label){const rows=getDaily().filter(r=>r.periodIndex===index&&(r.type==='absence'||r.type==='penalite'));const lines=rows.map(r=>{const d=r.data||{};return (r.type==='absence'?'Absence':'Pénalité')+' — '+(d.date||'Date non précisée')+' — '+(d.nom||'')+' '+(d.prenom||'')+' — '+(d.classe||'')+(r.type==='absence'?' — Durée : '+(d.duree||'0')+' h — Justifiée : '+(d.justifiee||'À déterminer'):' — Points retirés : '+(d.points||'0'))});const box=$('periodHistory');let detail=$('periodHistoryDetail');if(!detail){detail=document.createElement('div');detail.id='periodHistoryDetail';detail.className='period-history-card';box.append(detail)}detail.replaceChildren();const h=document.createElement('h4');h.textContent='Détail — '+label;const p=document.createElement('p');p.textContent=lines.length?lines.join('\n'):'Aucune absence ni pénalité enregistrée pour cette période.';p.style.whiteSpace='pre-line';detail.append(h,p);detail.scrollIntoView({behavior:'smooth',block:'nearest'})}
+function reactivatePeriod(index,label){const c=getConfiguration();if(index<0||index>=Number(c.completedPeriods||0))return;if(!confirm('Réactiver '+label+' ? Les périodes précédentes resteront terminées. Les saisies déjà enregistrées dans toutes les périodes seront conservées. Les nouvelles saisies seront rattachées à '+label+'.'))return;c.completedPeriods=index;try{saveConfiguration(c);$('periodMessage').textContent=label+' est maintenant la période active. Les données existantes ont été conservées.';renderPeriodManager();$('periodMessage').scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){$('periodMessage').textContent='Impossible de réactiver cette période. Vérifiez l’espace disponible du navigateur.'}}
+function finishCurrentPeriod(){const c=getConfiguration(),labels=periodLabels(c.regime),done=Math.min(Number(c.completedPeriods||0),labels.length);if(done>=labels.length)return;if(!confirm('Confirmer la fin de '+labels[done]+' ? Cette période sera conservée dans l’historique. Vous pourrez la réactiver ultérieurement depuis cette page.'))return;c.completedPeriods=done+1;try{saveConfiguration(c);$('periodMessage').textContent=done+1<labels.length?'Période terminée. La période suivante est maintenant active.':'Toutes les périodes de ce régime sont terminées. Vous pouvez réactiver une période depuis son historique.';renderPeriodManager()}catch(e){$('periodMessage').textContent='Impossible d’enregistrer la progression sur cet appareil.'}}
+function showSettingsMenu(){ $('settingsMenu').classList.remove('hidden'); $('configurationForm').classList.add('hidden'); document.querySelectorAll('[data-settings-panel]').forEach(p=>p.classList.add('hidden')); }
+function openSettingsPanel(name){ $('settingsMenu').classList.add('hidden'); $('configurationForm').classList.remove('hidden'); document.querySelectorAll('[data-settings-panel]').forEach(p=>p.classList.toggle('hidden',p.dataset.settingsPanel!==name)); $('configurationMessage').textContent=''; }
+document.querySelectorAll('[data-settings-open]').forEach(btn=>btn.addEventListener('click',()=>openSettingsPanel(btn.dataset.settingsOpen)));
+document.querySelectorAll('.settings-back').forEach(btn=>btn.addEventListener('click',showSettingsMenu));
+function openConfiguration(){administrationModule.classList.add('hidden');const c=getConfiguration();$('configurationForm').reset();$('configYear').value=c.annee||'';$('configRegime').value=c.regime||'trimestre';$('configClasses').value=(c.classes||[]).join('\n');$('configGroups').value=(c.groupes||[]).join('\n');$('configurationMessage').textContent='';$('periodMessage').textContent='';updatePeriodPreview();showSettingsMenu();$('configurationModule').classList.remove('hidden');studentModule.classList.add('hidden');dailyModule.classList.add('hidden');$('analysisModule').classList.add('hidden');$('configurationModule').scrollIntoView({behavior:'smooth',block:'start'})}
+function linesFromTextarea(id){return [...new Set($(id).value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))]}
+$('configRegime').addEventListener('change',()=>{const c=getConfiguration();if(c.regime!==$('configRegime').value){$('periodMessage').textContent='Le changement de régime réinitialisera la progression des périodes après enregistrement.'}updatePeriodPreview()});
+$('finishPeriodBtn').addEventListener('click',finishCurrentPeriod);
+$('configurationForm').addEventListener('submit',e=>{e.preventDefault();const old=getConfiguration(),regime=$('configRegime').value,annee=$('configYear').value.trim();let completed=Number(old.completedPeriods||0);if(regime!==old.regime|| (old.annee&&annee!==old.annee)){if((regime!==old.regime||annee!==old.annee)&&completed>0&&!confirm('Le régime ou l’année scolaire change. Recommencer la progression des périodes à zéro ? Les saisies déjà enregistrées seront conservées dans leurs historiques.'))return;completed=0}const data={annee,regime,classes:linesFromTextarea('configClasses'),groupes:linesFromTextarea('configGroups'),completedPeriods:completed};try{saveConfiguration(data);$('configurationMessage').textContent='Paramètres enregistrés sur cet appareil.';renderPeriodManager()}catch(err){$('configurationMessage').textContent='Enregistrement impossible. Vérifiez l’espace disponible du navigateur.'}});
+$('resetConfiguration').addEventListener('click',()=>{if(confirm('Réinitialiser les paramètres scolaires ? Les fiches et les saisies quotidiennes ne seront pas supprimées.')){localStorage.removeItem(configurationKey);openConfiguration();$('configurationMessage').textContent='Paramètres réinitialisés.'}});
+
+
+render();
+</script>
+</body>
+</html>
