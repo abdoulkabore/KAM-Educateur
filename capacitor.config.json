@@ -1,0 +1,9 @@
+{
+  "appId": "bf.kam.educateur",
+  "appName": "KAM Educateur",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": false
+  }
+}
