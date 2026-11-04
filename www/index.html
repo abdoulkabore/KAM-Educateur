@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KAM Éducateur — Version 3.0 hors connexion</title>
+<title>KAM Éducateur — Version 3.1 hors connexion</title>
 <style>
 :root{--blue:#293b91;--blue2:#3b4aa7;--bg:#f7f8fc;--ink:#1c2442;--muted:#697083;--line:#d9dce8;--pale:#e7e9f7}
 *{box-sizing:border-box}
@@ -123,9 +123,29 @@ h1{font-size:30px;margin:0 0 12px}
 @media(max-width:520px){.settings-card{padding:17px 16px;gap:14px;min-height:108px}.settings-icon{width:58px;height:58px;flex-basis:58px}.settings-copy strong{font-size:20px}.settings-copy small{font-size:16px}}
 
 .admin-import-card{background:#f5f2fa;border:1px solid #e4deed;border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 2px 4px #00000012}.admin-import-card h3{margin-top:0}.admin-import-card select{width:100%;padding:14px;border:1px solid #888;border-radius:8px;background:transparent;font-size:1rem}
+
+/* Verrouillage de l’application par code PIN */
+#kamPinGate{position:fixed;inset:0;z-index:10000;background:linear-gradient(145deg,#293b91,#3b4aa7);display:flex;align-items:center;justify-content:center;padding:22px;color:#1c2442}
+#kamPinGate[hidden]{display:none!important}
+.kam-pin-card{width:min(100%,420px);background:#fff;border-radius:26px;padding:28px 22px;box-shadow:0 18px 55px #0004;text-align:center}
+.kam-pin-logo{font-size:42px;margin-bottom:8px}.kam-pin-card h2{margin:8px 0 10px;font-size:25px;color:#293b91}.kam-pin-card p{color:#697083;line-height:1.45}.kam-pin-card label{display:block;text-align:left;font-weight:700;margin:16px 0 7px}.kam-pin-card input{width:100%;padding:15px;border:1.5px solid #cdd2e3;border-radius:12px;font-size:23px;letter-spacing:9px;text-align:center;box-sizing:border-box}.kam-pin-card button{width:100%;margin-top:18px;padding:15px;border:0;border-radius:12px;background:#293b91;color:#fff;font-weight:700;font-size:16px}.kam-pin-message{min-height:22px;color:#b42318!important;font-size:14px}
 </style>
 </head>
 <body>
+<div id="kamPinGate" role="dialog" aria-modal="true" aria-labelledby="kamPinTitle">
+  <div class="kam-pin-card">
+    <div class="kam-pin-logo" aria-hidden="true">🔒</div>
+    <h2 id="kamPinTitle">KAM Éducateur</h2>
+    <p id="kamPinIntro">Accès sécurisé à vos dossiers scolaires.</p>
+    <label for="kamPinInput">Code PIN à 6 chiffres</label>
+    <input id="kamPinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" aria-label="Code PIN à six chiffres">
+    <div id="kamPinConfirmWrap" hidden><label for="kamPinConfirm">Confirmer le code PIN</label><input id="kamPinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" aria-label="Confirmer le code PIN"></div>
+    <p id="kamPinMessage" class="kam-pin-message" role="status"></p>
+    <button id="kamPinSubmit" type="button">Déverrouiller</button>
+    <p style="font-size:12px;margin-bottom:0">Ne communiquez pas votre code à une autre personne.</p>
+  </div>
+</div>
+
 <header>
   <div class="brand">KAM Éducateur</div>
   <button class="menu" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
@@ -350,6 +370,40 @@ const domains = [
 ];
 let index=0, visible=true;
 const $=id=>document.getElementById(id);
+// Verrouillage local de l'application : seul le hash PBKDF2 et son sel sont conservés.
+const kamPinStorageKey='kam_app_pin_v1';
+const kamPinIterations=210000;
+function kamPinRecord(){try{return JSON.parse(localStorage.getItem(kamPinStorageKey)||'null')}catch(e){return null}}
+function kamBytesToB64(bytes){return btoa(String.fromCharCode(...bytes))}
+async function kamPinHash(pin,saltB64){
+ if(!crypto?.subtle)throw Error('Le chiffrement sécurisé n’est pas disponible sur cet appareil.');
+ const salt=Uint8Array.from(atob(saltB64),c=>c.charCodeAt(0));
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
+ const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:kamPinIterations,hash:'SHA-256'},key,256);
+ return kamBytesToB64(new Uint8Array(bits));
+}
+function kamShowPinGate(){
+ const gate=$('kamPinGate'),input=$('kamPinInput'),confirmWrap=$('kamPinConfirmWrap'),record=kamPinRecord();
+ gate.hidden=false;confirmWrap.hidden=!!record;
+ $('kamPinTitle').textContent=record?'KAM Éducateur':'Créer votre code PIN';
+ $('kamPinIntro').textContent=record?'Saisissez votre code pour accéder à l’application.':'Première utilisation : choisissez un code personnel à 6 chiffres.';
+ $('kamPinSubmit').textContent=record?'Déverrouiller':'Enregistrer mon code';
+ input.value='';$('kamPinConfirm').value='';$('kamPinMessage').textContent='';input.focus();
+}
+async function kamSubmitPin(){
+ const btn=$('kamPinSubmit'),input=$('kamPinInput'),confirmInput=$('kamPinConfirm'),msg=$('kamPinMessage');
+ const pin=input.value,record=kamPinRecord();btn.disabled=true;msg.textContent='';
+ try{
+  if(!/^\d{6}$/.test(pin))throw Error('Le code doit contenir exactement 6 chiffres.');
+  if(!record){if(pin!==confirmInput.value)throw Error('Les deux codes ne correspondent pas.');const salt=new Uint8Array(16);crypto.getRandomValues(salt);const saltB64=kamBytesToB64(salt);const hash=await kamPinHash(pin,saltB64);localStorage.setItem(kamPinStorageKey,JSON.stringify({salt:saltB64,hash,iterations:kamPinIterations,algorithm:'PBKDF2-SHA-256'}));if(kamPinRecord()?.hash!==hash)throw Error('Impossible d’enregistrer le code sur cet appareil.');}
+  else{const hash=await kamPinHash(pin,record.salt);if(hash!==record.hash){input.value='';throw Error('Code PIN incorrect. Réessayez.');}}
+  $('kamPinGate').hidden=true;input.value='';confirmInput.value='';
+ }catch(e){msg.textContent=e.message||'Vérification impossible.';}
+ finally{btn.disabled=false;}
+}
+$('kamPinSubmit').addEventListener('click',kamSubmitPin);
+$('kamPinInput').addEventListener('keydown',e=>{if(e.key==='Enter')kamSubmitPin()});
+$('kamPinConfirm').addEventListener('keydown',e=>{if(e.key==='Enter')kamSubmitPin()});
 function render(){
  const d=domains[index];
  document.body.classList.toggle('admin-theme',index===4);
@@ -408,7 +462,7 @@ const dailyTypes={
 let dailyType='absence', dailyEditingId=null;
 function getDaily(){try{return JSON.parse(localStorage.getItem(dailyStorageKey)||'[]')}catch(e){return []}}
 function saveDaily(rows){localStorage.setItem(dailyStorageKey,JSON.stringify(rows))}
-function renderDomainTools(){const holder=$('domainTools');if(!holder)return;holder.replaceChildren();if(index===0){holder.append(makeToolButton('Élèves','Inscription, recherche et gestion des élèves','◇',()=>showStudentModule()));return;}if(index===1){[['absence','Absence','Saisie et suivi des absences','◷'],['avisee','Absences avisées','Absences signalées à l’avance','♧'],['incident','Incidents','Enregistrement et suivi des incidents','⚠'],['objet','Objets confisqués','Suivi des objets retenus','▣'],['carnet','Carnet journalier','Journal des activités et événements','▤']].forEach(x=>holder.append(makeToolButton(x[1],x[2],x[3],()=>openDailyModule(x[0]))));return;}if(index===2){holder.append(makeToolButton('Historique scolaire','Consulter les années scolaires clôturées','▧',()=>openAnalysisModule('history')));holder.append(makeToolButton('Filtrage / Export','Filtres, statistiques et export des données','▽',()=>openAnalysisModule('filter')));return;}if(index===3){holder.append(makeToolButton('Paramètres','Classes, groupes, année scolaire et régime','⚙',openConfiguration));return;}if(index===4){[['Utilisateurs','Créer, modifier, activer ou désactiver les comptes utilisateurs.','♙','users'],['Importations','Importer et contrôler les données depuis des fichiers Excel ou CSV.','⇧','imports'],['Licence','Consulter les informations de licence de KAM Éducateur.','⚿','license'],['Sauvegarde des données','Créer une copie complète et sécurisée des données.','☁','backup'],['Opérations décisives','Restauration des données et autres opérations décisives.','⚠','critical']].forEach(x=>holder.append(makeToolButton(x[0],x[1],x[2],()=>openAdminPanel(x[3]))));return;} }
+function renderDomainTools(){const holder=$('domainTools');if(!holder)return;holder.replaceChildren();if(index===0){holder.append(makeToolButton('Élèves','Inscription, recherche et gestion des élèves','◇',()=>showStudentModule()));return;}if(index===1){[['absence','Absence','Saisie et suivi des absences','◷'],['avisee','Absences avisées','Absences signalées à l’avance','♧'],['incident','Incidents','Enregistrement et suivi des incidents','⚠'],['objet','Objets confisqués','Suivi des objets retenus','▣'],['carnet','Carnet journalier','Journal des activités et événements','▤']].forEach(x=>holder.append(makeToolButton(x[1],x[2],x[3],()=>openDailyModule(x[0]))));return;}if(index===2){holder.append(makeToolButton('Historique scolaire','Consulter les années scolaires clôturées','▧',()=>openAnalysisModule('history')));holder.append(makeToolButton('Filtrage / Export','Filtres, statistiques et export des données','▽',()=>openAnalysisModule('filter')));return;}if(index===3){holder.append(makeToolButton('Paramètres','Classes, groupes, année scolaire et régime','⚙',openConfiguration));return;}if(index===4){[['Sécurité et code PIN','Modifier le code PIN de verrouillage de l’application.','🔒','security'],['Utilisateurs','Créer, modifier, activer ou désactiver les comptes utilisateurs.','♙','users'],['Importations','Importer et contrôler les données depuis des fichiers Excel ou CSV.','⇧','imports'],['Licence','Consulter les informations de licence de KAM Éducateur.','⚿','license'],['Sauvegarde des données','Créer une copie complète et sécurisée des données.','☁','backup'],['Opérations décisives','Restauration des données et autres opérations décisives.','⚠','critical']].forEach(x=>holder.append(makeToolButton(x[0],x[1],x[2],()=>openAdminPanel(x[3]))));return;} }
 function makeToolButton(title,desc,iconText,fn){const b=document.createElement('button');b.className='tool-item';b.type='button';const ic=document.createElement('div');ic.className='small-icon';ic.textContent=iconText;const body=document.createElement('div');body.style.flex='1';const t=document.createElement('div');t.className='label';t.textContent=title;const d=document.createElement('div');d.className='desc';d.textContent=desc;body.append(t,d);const ch=document.createElement('span');ch.className='chevron';ch.textContent='›';b.append(ic,body,ch);b.addEventListener('click',fn);return b}
 function openDailyModule(type){administrationModule.classList.add('hidden');dailyType=type;dailyEditingId=null;dailyForm.reset();$('absenceDirectory').classList.toggle('hidden',type!=='absence');$('absenceBack').classList.add('hidden');dailyForm.classList.toggle('hidden',type==='absence');$('dailyModule').querySelector('.saved-section').classList.toggle('hidden',type==='absence');$('dailyModuleTitle').textContent=dailyTypes[type].title;$('dailyModuleDesc').textContent=dailyTypes[type].desc;$('dailyFields').replaceChildren();dailyTypes[type].fields.forEach(f=>{const lab=document.createElement('label');lab.textContent=f[1]+(f[3]?' *':'');let el;if(f[2]==='textarea'){el=document.createElement('textarea')}else if(f[2]==='select'){el=document.createElement('select');(f[4]||[]).forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;el.append(op)})}else{el=document.createElement('input');el.type=f[2];if(f[2]==='number'){el.min='0';el.step='0.5'}}el.name=f[0];el.required=!!f[3];lab.append(el);$('dailyFields').append(lab)});$('dailyMessage').textContent='';$('dailySave').textContent='Enregistrer';dailyModule.classList.remove('hidden');studentModule.classList.add('hidden');if(type==='absence')renderAbsenceStudents();dailyModule.scrollIntoView({behavior:'smooth',block:'start'});renderDailyList()}
 function renderAbsenceStudents(){
@@ -527,7 +581,7 @@ $('exportFullBackup').addEventListener('click',()=>downloadJSON({exportedAt:new 
 
 // Domaine 5 — Administration
 const administrationModule=$('administrationModule');
-function fullBackupObject(){return {app:'KAM Éducateur',version:'3.0',exportedAt:new Date().toISOString(),students:getStudents(),daily:getDaily(),archives:getArchives(),configuration:getConfiguration(),users:JSON.parse(localStorage.getItem('kam_users_v1')||'[]')}}
+function fullBackupObject(){return {app:'KAM Éducateur',version:'3.1',exportedAt:new Date().toISOString(),students:getStudents(),daily:getDaily(),archives:getArchives(),configuration:getConfiguration(),users:JSON.parse(localStorage.getItem('kam_users_v1')||'[]')}}
 // Code d'autorisation hors ligne : contrôle pratique, non cryptographique.
 function kamCode(name,role){let x=2166136261;const raw=('KAM-EDU-2026|'+name.trim().toUpperCase()+'|'+role).normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(let i=0;i<raw.length;i++){x^=raw.charCodeAt(i);x=Math.imul(x,16777619)}return 'KAM-'+(x>>>0).toString(16).toUpperCase().padStart(8,'0')}
 function kamUsers(){try{return JSON.parse(localStorage.getItem('kam_users_v1')||'[]')}catch(e){return []}}
@@ -540,6 +594,16 @@ function openAdminPanel(which){
   const action=(txt,fn,cls='primary-btn')=>{const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=txt;b.addEventListener('click',fn);box.append(b);return b};
   const note=txt=>add('p',txt,'notice');
   const heading={users:'Utilisateurs',imports:'Importations',license:'Licence',backup:'Sauvegarde des données',critical:'Opérations décisives'}[which]||'Administration';$('adminTitle').textContent=heading;$('adminDesc').textContent='Administration de KAM Éducateur';
+  if(which==='security'){
+    add('h3','Modifier le code PIN de KAM Éducateur');
+    note('Le code PIN protège l’ouverture de l’application. Il est stocké sous forme de dérivé cryptographique sur cet appareil, et non en clair.');
+    const oldLab=add('label','Code PIN actuel');const oldPin=document.createElement('input');oldPin.type='password';oldPin.inputMode='numeric';oldPin.maxLength=6;oldPin.placeholder='6 chiffres';oldLab.append(oldPin);
+    const newLab=add('label','Nouveau code PIN');const newPin=document.createElement('input');newPin.type='password';newPin.inputMode='numeric';newPin.maxLength=6;newPin.placeholder='6 chiffres';newLab.append(newPin);
+    const confirmLab=add('label','Confirmer le nouveau code');const confirmPin=document.createElement('input');confirmPin.type='password';confirmPin.inputMode='numeric';confirmPin.maxLength=6;confirmPin.placeholder='6 chiffres';confirmLab.append(confirmPin);
+    const msg=add('p','','notice');
+    action('ENREGISTRER LE NOUVEAU CODE',async()=>{const btn=box.querySelector('button.primary-btn');if(!/^\d{6}$/.test(oldPin.value)||!/^\d{6}$/.test(newPin.value)){msg.textContent='Chaque code doit contenir exactement 6 chiffres.';return;}if(newPin.value!==confirmPin.value){msg.textContent='Les deux nouveaux codes ne correspondent pas.';return;}try{const rec=kamPinRecord();if(!rec)throw Error('Aucun code PIN n’est configuré.');const oldHash=await kamPinHash(oldPin.value,rec.salt);if(oldHash!==rec.hash)throw Error('Le code PIN actuel est incorrect.');const salt=new Uint8Array(16);crypto.getRandomValues(salt);const saltB64=kamBytesToB64(salt),hash=await kamPinHash(newPin.value,saltB64);localStorage.setItem(kamPinStorageKey,JSON.stringify({salt:saltB64,hash,iterations:kamPinIterations,algorithm:'PBKDF2-SHA-256'}));msg.textContent='Nouveau code PIN enregistré. Conservez-le en lieu sûr.';oldPin.value='';newPin.value='';confirmPin.value='';}catch(e){msg.textContent=e.message||'Modification impossible.';}},'primary-btn');
+    note('En cas d’oubli du code, il n’existe pas de récupération automatique. Gardez une sauvegarde JSON à jour avant toute opération de réinstallation.');
+  }
   if(which==='users'){add('h3','Créer un code d’autorisation');note('Saisissez le nom de l’éducateur et son rôle. Communiquez-lui le code généré par un moyen de votre choix. Il devra saisir exactement le même nom et le code dans la rubrique Licence sur son téléphone.');const nm=add('label','Nom complet');const name=document.createElement('input');name.type='text';name.placeholder='Nom de l’éducateur';name.autocomplete='off';nm.append(name);const rl=add('label','Rôle');const role=document.createElement('select');[['educateur','Éducateur'],['consultation','Consultation seulement'],['admin','Administrateur']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;role.append(o)});rl.append(role);const code=add('p','Code : —','notice');action('Générer le code',()=>{if(!name.value.trim()){code.textContent='Saisissez le nom complet.';return}const c=kamCode(name.value,role.value);code.textContent='Code à transmettre : '+c;const arr=kamUsers();if(!arr.some(u=>u.name.toLowerCase()===name.value.trim().toLowerCase()))arr.push({name:name.value.trim(),role:role.value,code:c,issuedAt:new Date().toISOString()});saveKamUsers(arr)});add('h3','Autorisations enregistrées sur cet appareil');const list=add('div','','notice');const draw=()=>{list.replaceChildren();kamUsers().forEach(u=>{const row=add('div',u.name+' — '+u.role+' — '+u.code,'daily-record');const del=document.createElement('button');del.type='button';del.className='secondary-btn';del.textContent='Retirer';del.onclick=()=>{saveKamUsers(kamUsers().filter(x=>x.code!==u.code));draw()};row.append(del)})};draw();note('Important : cette liste reste sur ce téléphone. Pour un autre téléphone, transmettez le code manuellement. Ce mécanisme est une autorisation hors ligne simple, pas une protection cryptographique contre une personne qui sait modifier le fichier HTML.');}
   if(which==='imports'){
     add('h3','Type d’importation');
@@ -714,6 +778,7 @@ $('configurationForm').addEventListener('submit',e=>{e.preventDefault();const ol
 $('resetConfiguration').addEventListener('click',()=>{if(confirm('Réinitialiser les paramètres scolaires ? Les fiches et les saisies quotidiennes ne seront pas supprimées.')){localStorage.removeItem(configurationKey);openConfiguration();$('configurationMessage').textContent='Paramètres réinitialisés.'}});
 
 
+kamShowPinGate();
 render();
 </script>
 </body>
