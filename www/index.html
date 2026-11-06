@@ -819,45 +819,137 @@ render();
  <button type="button" id="kamLogout">↪　Déconnexion</button>
 </nav>
 <div id="kamAccountPanel" role="dialog" aria-modal="true" aria-labelledby="kamAccountTitle">
- <div id="kamAccountCard"><h2 id="kamAccountTitle">Mon compte</h2><p><strong>Application :</strong> KAM Éducateur</p><p><strong>Type de compte :</strong> Compte local de cet appareil</p><p><strong>Session :</strong> Connectée</p><p id="kamAccountName"></p><button type="button" id="kamCloseAccount">Fermer</button></div>
-</div>
-<div id="kamAuthScreen">
- <div id="kamAuthCard">
-  <h2 id="kamAuthTitle">Bienvenue sur KAM Éducateur</h2>
-  <p id="kamAuthIntro">Créez un mot de passe personnel pour protéger l’accès à votre application sur cet appareil.</p>
-  <label for="kamAuthPassword">Mot de passe</label><input id="kamAuthPassword" type="password" autocomplete="current-password" placeholder="8 caractères minimum">
-  <div id="kamAuthConfirmWrap"><label for="kamAuthConfirm">Confirmer le mot de passe</label><input id="kamAuthConfirm" type="password" autocomplete="new-password" placeholder="Répétez le mot de passe"></div>
-  <div id="kamAuthMessage" role="status"></div>
-  <button type="button" id="kamAuthSubmit">Créer mon mot de passe</button>
+ <div id="kamAccountCard"><h2 id="kamAccountTitle">Mon compte</h2><p><strong>Application :</strong> KAM Éducateur</p><p><strong>Type de compte :</strong> <span id="kamAccountType">Compte local</span></p><p><strong>Session :</strong> Connectée</p><p id="kamAccountName"></p><button type="button" id="kamManageAccess">Gestion des accès (propriétaire)</button><button type="button" id="kamCloseAccount">Fermer</button></div>
+<div id="kamAccessPanel" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;z-index:10030;background:#0007;align-items:center;justify-content:center;padding:18px">
+ <div style="background:#fff;border-radius:18px;padding:20px;width:min(440px,100%);max-height:90vh;overflow:auto;color:#24233a">
+  <h2>Gestion des accès</h2><p>Générez un code temporaire à communiquer à un utilisateur après paiement.</p>
+  <label for="kamAccessDuration">Durée d'utilisation</label>
+  <select id="kamAccessDuration" style="width:100%;padding:12px;border:1px solid #aaa;border-radius:9px;font-size:16px"><option value="7">7 jours</option><option value="30" selected>30 jours</option><option value="90">3 mois (90 jours)</option><option value="180">6 mois (180 jours)</option><option value="365">1 an (365 jours)</option></select>
+  <button type="button" id="kamGenerateCode" style="width:100%;padding:13px;margin-top:12px;background:#34458e;color:white;border:0;border-radius:10px;font-weight:bold">Générer un code</button>
+  <p id="kamGeneratedCode" style="font-size:19px;font-weight:bold;overflow-wrap:anywhere"></p>
+  <button type="button" id="kamCopyCode" style="width:100%;padding:12px;background:#e9eaf5;border:0;border-radius:9px">Copier le code</button>
+  <p id="kamAccessHistory" style="font-size:13px;white-space:pre-wrap"></p>
+  <button type="button" id="kamCloseAccess" style="padding:12px 18px;margin-top:10px">Fermer</button>
  </div>
 </div>
-<script>
-(()=>{'use strict';
- const $=id=>document.getElementById(id), key='kam_login_credential_v1';
- const screen=$('kamAuthScreen'), menu=$('kamAccountMenu'), shade=$('kamAccountShade'), panel=$('kamAccountPanel');
- const b64=a=>btoa(String.fromCharCode(...a));
- async function hashPassword(password,salt){if(!crypto?.subtle)throw Error('Le chiffrement du mot de passe est indisponible.');const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:Uint8Array.from(atob(salt),c=>c.charCodeAt(0)),iterations:180000,hash:'SHA-256'},material,256);return b64(new Uint8Array(bits));}
- function credential(){try{return JSON.parse(localStorage.getItem(key)||'null')}catch(e){return null}}
- function deviceId(){let id=localStorage.getItem('kam_device_id_v1');if(!id){const a=crypto.getRandomValues(new Uint8Array(12));id='KAM-'+Array.from(a,x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();localStorage.setItem('kam_device_id_v1',id);}return id;}
- const licenseBox=document.createElement('section');licenseBox.id='kamLicenseActivation';licenseBox.style.margin='16px 0';licenseBox.style.padding='14px';licenseBox.style.border='1px solid #d8d9e4';licenseBox.style.borderRadius='12px';
- licenseBox.innerHTML='<h3 style="margin-top:0">Activation de KAM Éducateur</h3><p>Communique cet identifiant à l’administrateur pour recevoir ton code personnel.</p><p style="font-weight:800;overflow-wrap:anywhere" id="kamDeviceId"></p><label style="display:block;font-weight:700;margin:12px 0 6px">Code d’accès reçu</label><textarea id="kamLicenseCode" rows="4" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #aaa;border-radius:8px"></textarea><p id="kamLicenseMessage" style="color:#a32626;font-weight:600"></p><button type="button" id="kamActivateLicense">ACTIVER MON ACCÈS</button>';
- $('kamAuthCard').insertBefore(licenseBox,$('kamAuthCard').querySelector('label'));
- const ownerKey='kam_owner_device_v1';
- // Une installation déjà utilisée avant cette mise à jour reste l'installation propriétaire.
- if(!localStorage.getItem(ownerKey)&&credential()){localStorage.setItem(ownerKey,'1');}
- async function verifyToken(token){const parts=String(token||'').trim().split('.');if(parts.length!==2)throw Error('Code invalide. Vérifie qu’il est complet.');let payload;try{payload=JSON.parse(decodeURIComponent(escape(atob(parts[0]))));}catch(e){throw Error('Format du code incorrect.');}if(payload.app!=='KAM-EDU'||payload.v!==1)throw Error('Ce code ne correspond pas à KAM Éducateur.');if(payload.device!==deviceId())throw Error('Ce code a été créé pour un autre téléphone.');if(payload.expiry&&payload.expiry<new Date().toISOString().slice(0,10))throw Error('Ce code a expiré. Demande un nouveau code à l’administrateur.');const k=await crypto.subtle.importKey('raw',new TextEncoder().encode('KAM-EDUCATEUR-OFFLINE-LICENCE-2026-NAZINON-4D8F7A2C'),{name:'HMAC',hash:'SHA-256'},false,['verify']);const sig=Uint8Array.from(parts[1].match(/.{2}/g)||[],x=>parseInt(x,16));const ok=await crypto.subtle.verify('HMAC',k,sig,new TextEncoder().encode(JSON.stringify(payload)));if(!ok)throw Error('Code non reconnu ou modifié.');return payload;}
- async function validStoredLicense(){if(localStorage.getItem(ownerKey)==='1')return true;const token=localStorage.getItem('kam_active_license_v1');if(!token)return false;try{await verifyToken(token);return true;}catch(e){localStorage.removeItem('kam_active_license_v1');return false;}}
- function showAuth(){screen.style.display='flex';menu.style.display='none';shade.style.display='none';panel.style.display='none';$('kamAuthPassword').value='';$('kamAuthConfirm').value='';$('kamAuthMessage').textContent='';const exists=!!credential();$('kamAuthTitle').textContent=exists?'Connexion à KAM Éducateur':'Bienvenue sur KAM Éducateur';$('kamAuthIntro').textContent=exists?'Saisissez votre mot de passe pour accéder au tableau de bord.':'Créez un mot de passe personnel après activation de votre licence.';$('kamAuthConfirmWrap').style.display=exists?'none':'block';$('kamAuthSubmit').textContent=exists?'Se connecter':'Créer mon mot de passe';$('kamDeviceId').textContent='Identifiant de ce téléphone : '+deviceId();validStoredLicense().then(ok=>{licenseBox.style.display=ok?'none':'block';$('kamAuthPassword').disabled=!ok;$('kamAuthConfirm').disabled=!ok;$('kamAuthSubmit').disabled=!ok;$('kamAuthIntro').textContent=ok?(exists?'Saisissez votre mot de passe pour accéder au tableau de bord.':'Créez un mot de passe personnel pour cet appareil.'):'L’activation est nécessaire avant de pouvoir créer un compte ou se connecter.';});}
- $('kamActivateLicense').addEventListener('click',async()=>{const btn=$('kamActivateLicense'),msg=$('kamLicenseMessage');btn.disabled=true;try{const token=$('kamLicenseCode').value.trim();const payload=await verifyToken(token);localStorage.setItem('kam_active_license_v1',token);msg.style.color='#16733a';msg.textContent='Accès activé pour '+payload.name+'.';showAuth();}catch(e){msg.textContent=e.message||'Activation impossible.';}finally{btn.disabled=false;}});
- let busy=false;
- $('kamAuthSubmit').addEventListener('click',async()=>{if(busy)return;if(!(await validStoredLicense())){showAuth();return;}busy=true;const btn=$('kamAuthSubmit'),pass=$('kamAuthPassword').value;btn.disabled=true;try{if(pass.length<8)throw Error('Le mot de passe doit contenir au moins 8 caractères.');let c=credential();if(!c){if(pass!==$('kamAuthConfirm').value)throw Error('Les deux mots de passe ne correspondent pas.');const salt=b64(crypto.getRandomValues(new Uint8Array(16)));const digest=await hashPassword(pass,salt);localStorage.setItem(key,JSON.stringify({salt,hash:digest,iterations:180000,algorithm:'PBKDF2-SHA-256'}));c=credential();if(!c||c.hash!==digest)throw Error('Impossible d’enregistrer le mot de passe sur cet appareil.');}else{const digest=await hashPassword(pass,c.salt);if(digest!==c.hash)throw Error('Mot de passe incorrect. Réessayez.');}screen.style.display='none';$('kamAuthPassword').value='';$('kamAuthConfirm').value='';}catch(e){$('kamAuthMessage').textContent=e.message||'Erreur de connexion.';}finally{busy=false;btn.disabled=false;}});
- $('kamAuthPassword').addEventListener('keydown',e=>{if(e.key==='Enter')$('kamAuthSubmit').click()});$('kamAuthConfirm').addEventListener('keydown',e=>{if(e.key==='Enter')$('kamAuthSubmit').click()});
- $('menuBtn').addEventListener('click',()=>{const open=menu.style.display==='block';menu.style.display=open?'none':'block';shade.style.display=open?'none':'block';});shade.addEventListener('click',()=>{menu.style.display='none';shade.style.display='none'});
- $('kamMyAccount').addEventListener('click',()=>{menu.style.display='none';shade.style.display='none';const profile=(()=>{try{return JSON.parse(localStorage.getItem('kam_profile_v1')||'null')}catch(e){return null}})();const name=profile&&(profile.name||profile.nom||profile.fullName);$('kamAccountName').textContent=name?'Nom du compte : '+name:'Nom du compte : Abdoulmaguiide Kabo';panel.style.display='flex';});
- $('kamCloseAccount').addEventListener('click',()=>panel.style.display='none');panel.addEventListener('click',e=>{if(e.target===panel)panel.style.display='none'});
- $('kamLogout').addEventListener('click',()=>{menu.style.display='none';shade.style.display='none';showAuth()});showAuth();
-})();
-</script>
+</div>
+<div id="kamAuthScreen">
+  <div id="kamAuthCard">
+   <h2 id="kamAuthTitle">Bienvenue sur KAM Éducateur</h2>
+   <p id="kamAuthIntro">Créez un mot de passe personnel pour protéger l’accès à votre application sur cet appareil.</p>
+   <label for="kamAuthPassword">Mot de passe</label><input id="kamAuthPassword" type="password" autocomplete="current-password" placeholder="8 caractères minimum">
+   <div id="kamAuthConfirmWrap"><label for="kamAuthConfirm">Confirmer le mot de passe</label><input id="kamAuthConfirm" type="password" autocomplete="new-password" placeholder="Répétez le mot de passe"></div>
+   <div id="kamActivationWrap" style="display:none">
+    <label for="kamActivationCode">Code d'accès fourni par le propriétaire</label>
+    <input id="kamActivationCode" type="text" autocomplete="off" placeholder="KAM-30-XXXXXXXX">
+    <button type="button" id="kamActivateCode" style="width:100%;padding:15px;margin-top:10px;border:0;border-radius:12px;background:#16804a;color:white;font-weight:700;font-size:16px">Activer mon accès</button>
+   </div>
+   <div id="kamAuthMessage" role="status"></div>
+   <button type="button" id="kamAuthSubmit">Créer mon mot de passe</button>
+  </div>
+ </div>
+ <script>
+ (()=>{'use strict';
+  const $=id=>document.getElementById(id), key='kam_login_credential_v1';
+  const screen=$('kamAuthScreen'), menu=$('kamAccountMenu'), shade=$('kamAccountShade'), panel=$('kamAccountPanel');
+  const b64=a=>btoa(String.fromCharCode(...a));
+  async function hashPassword(password,salt){
+    if(!crypto?.subtle)throw Error('Le chiffrement du mot de passe est indisponible.');
+    const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:Uint8Array.from(atob(salt),c=>c.charCodeAt(0)),iterations:180000,hash:'SHA-256'},material,256);
+    return b64(new Uint8Array(bits));
+  }
+  function credential(){try{return JSON.parse(localStorage.getItem(key)||'null')}catch(e){return null}}
+  const ownerKey='kam_owner_mode_v1', accessKey='kam_access_license_v1', generatedKey='kam_generated_access_codes_v1';
+  // Signature hors-ligne : elle évite les codes saisis au hasard, mais ne remplace pas un serveur sécurisé.
+  function codeCheck(payload){let h=2166136261;const x='KAM-EDUCATEUR-ACCESS-2026|'+payload;for(let i=0;i<x.length;i++){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36).toUpperCase().padStart(7,'0').slice(-7)}
+  function makeCode(days){const n=Math.random().toString(36).slice(2,10).toUpperCase();const payload=days+'-'+n;return 'KAM-'+days+'-'+n+'-'+codeCheck(payload)}
+  function parseCode(code){const m=String(code||'').trim().toUpperCase().match(/^KAM-(7|30|90|180|365)-([A-Z0-9]{4,12})-([A-Z0-9]{7})$/);if(!m)return null;return codeCheck(m[1]+'-'+m[2])===m[3]?Number(m[1]):null}
+  function activeAccess(){try{const a=JSON.parse(localStorage.getItem(accessKey)||'null');return !!(a&&a.expiresAt>Date.now())}catch(e){return false}}
+  function showAuth(){
+    screen.style.display='flex';menu.style.display='none';shade.style.display='none';panel.style.display='none';
+    $('kamAuthPassword').value='';$('kamAuthConfirm').value='';$('kamAuthMessage').textContent='';
+    const exists=!!credential();
+    // Sur l'appareil propriétaire déjà configuré, un ancien état de licence invalide ne doit jamais bloquer l'ouverture.
+    if(exists&&!localStorage.getItem(ownerKey)&&!activeAccess()){localStorage.setItem(ownerKey,'1');localStorage.removeItem(accessKey);}
+    const owner=localStorage.getItem(ownerKey)==='1';
+    if(owner)localStorage.removeItem(accessKey);
+    const expired=!owner&&!!localStorage.getItem(accessKey)&&!activeAccess();
+    $('kamActivationWrap').style.display=(!owner&&exists)?'block':'none';
+    $('kamAuthTitle').textContent=expired?'Votre période d’accès est terminée':(exists?'Connexion à KAM Éducateur':'Bienvenue sur KAM Éducateur');
+    $('kamAuthIntro').textContent=owner?(exists?'Saisissez uniquement votre mot de passe habituel. Aucun code d’accès ne vous sera demandé.':'Créez le mot de passe du propriétaire.'):(exists?'Saisissez votre mot de passe puis activez votre accès avec le code fourni par le propriétaire.':'Créez votre mot de passe. Un code d’accès temporaire sera ensuite nécessaire.');
+    $('kamAuthConfirmWrap').style.display=exists?'none':'block';
+    $('kamAuthSubmit').textContent=exists?'Se connecter':'Créer mon mot de passe';
+  }
+  let busy=false;
+  $('kamAuthSubmit').addEventListener('click',async()=>{
+    if(busy)return;busy=true;const btn=$('kamAuthSubmit'),pass=$('kamAuthPassword').value;btn.disabled=true;
+    try{
+      if(pass.length<8)throw Error('Le mot de passe doit contenir au moins 8 caractères.');
+      let c=credential();
+      if(!c){
+        if(pass!==$('kamAuthConfirm').value)throw Error('Les deux mots de passe ne correspondent pas.');
+        const salt=b64(crypto.getRandomValues(new Uint8Array(16))),digest=await hashPassword(pass,salt);
+        localStorage.setItem(key,JSON.stringify({salt,hash:digest,iterations:180000,algorithm:'PBKDF2-SHA-256'}));
+        c=credential();if(!c||c.hash!==digest)throw Error('Impossible d’enregistrer le mot de passe sur cet appareil.');
+      }else{
+        const digest=await hashPassword(pass,c.salt);
+        if(digest!==c.hash)throw Error('Mot de passe incorrect. Réessayez.');
+      }
+      // Le propriétaire conserve l'accès sans licence temporaire.
+      const owner=localStorage.getItem(ownerKey)==='1';
+      if(owner)localStorage.removeItem(accessKey);
+      if(!owner&&!activeAccess()){ $('kamAuthMessage').textContent='Votre compte est créé. Entrez le code fourni par le propriétaire pour activer votre période.'; $('kamActivationWrap').style.display='block'; return; }
+      screen.style.display='none';$('kamAuthPassword').value='';$('kamAuthConfirm').value='';
+    }catch(e){$('kamAuthMessage').textContent=e.message||'Erreur de connexion.';}
+    finally{busy=false;btn.disabled=false;}
+  });
+  $('kamAuthPassword').addEventListener('keydown',e=>{if(e.key==='Enter')$('kamAuthSubmit').click()});
+  $('kamAuthConfirm').addEventListener('keydown',e=>{if(e.key==='Enter')$('kamAuthSubmit').click()});
+  $('kamActivateCode').addEventListener('click',()=>{
+    const days=parseCode($('kamActivationCode').value);
+    if(!days){$('kamAuthMessage').textContent='Code invalide. Vérifiez le code communiqué par le propriétaire.';return;}
+    const expiresAt=Date.now()+days*86400000;
+    localStorage.setItem(accessKey,JSON.stringify({activatedAt:Date.now(),expiresAt,days,code:$('kamActivationCode').value.trim().toUpperCase()}));
+    $('kamAuthMessage').textContent='Accès activé pour '+days+' jours. Connectez-vous avec votre mot de passe.';
+    $('kamActivationWrap').style.display='none';
+    $('kamAuthSubmit').textContent='Se connecter';
+  });
+  $('kamManageAccess').addEventListener('click',()=>{
+    if(localStorage.getItem(ownerKey)!=='1'){alert('Réservé au propriétaire de KAM Éducateur.');return;}
+    panel.style.display='none';$('kamAccessPanel').style.display='flex';
+    const list=(()=>{try{return JSON.parse(localStorage.getItem(generatedKey)||'[]')}catch(e){return []}})();
+    $('kamAccessHistory').textContent=list.length?'Codes générés sur cet appareil :\\n'+list.slice(-10).reverse().map(x=>x.code+' — '+x.days+' jours').join('\\n'):'Aucun code généré pour le moment.';
+  });
+  $('kamGenerateCode').addEventListener('click',()=>{
+    const days=Number($('kamAccessDuration').value),code=makeCode(days);
+    const list=(()=>{try{return JSON.parse(localStorage.getItem(generatedKey)||'[]')}catch(e){return []}})();
+    list.push({code,days,createdAt:new Date().toISOString()});localStorage.setItem(generatedKey,JSON.stringify(list));
+    $('kamGeneratedCode').textContent=code;
+    $('kamAccessHistory').textContent='Codes générés sur cet appareil :\\n'+list.slice(-10).reverse().map(x=>x.code+' — '+x.days+' jours').join('\\n');
+  });
+  $('kamCopyCode').addEventListener('click',async()=>{const t=$('kamGeneratedCode').textContent;if(!t)return;try{await navigator.clipboard.writeText(t);alert('Code copié.')}catch(e){alert('Copiez le code manuellement : '+t)}});
+  $('kamCloseAccess').addEventListener('click',()=>$('kamAccessPanel').style.display='none');
+  $('kamAccessPanel').addEventListener('click',e=>{if(e.target===$('kamAccessPanel'))$('kamAccessPanel').style.display='none'});
+  $('menuBtn').addEventListener('click',()=>{
+    const open=menu.style.display==='block';menu.style.display=open?'none':'block';shade.style.display=open?'none':'block';
+  });
+  shade.addEventListener('click',()=>{menu.style.display='none';shade.style.display='none'});
+  $('kamMyAccount').addEventListener('click',()=>{
+    menu.style.display='none';shade.style.display='none';
+    const profile=(()=>{try{return JSON.parse(localStorage.getItem('kam_profile_v1')||'null')}catch(e){return null}})();
+    const name=profile&&(profile.name||profile.nom||profile.fullName);
+    $('kamAccountName').textContent=name?'Nom du compte : '+name:'Nom du compte : Abdoulmaguiide Kabo';
+    $('kamAccountType').textContent=localStorage.getItem(ownerKey)==='1'?'Propriétaire':'Utilisateur temporaire';
+    $('kamManageAccess').style.display=localStorage.getItem(ownerKey)==='1'?'block':'none';
+    panel.style.display='flex';
+  });
+  $('kamCloseAccount').addEventListener('click',()=>panel.style.display='none');
+  panel.addEventListener('click',e=>{if(e.target===panel)panel.style.display='none'});
+  $('kamLogout').addEventListener('click',()=>{menu.style.display='none';shade.style.display='none';showAuth()});
+  showAuth();
+ })();
+ </script>
 
 <style>
 #kamAccountMenu{position:fixed;z-index:10002;top:66px;right:12px;width:min(290px,calc(100vw - 24px));background:#fff;border:1px solid #dedee8;border-radius:16px;box-shadow:0 10px 35px #0003;padding:10px;display:none;color:#222}
