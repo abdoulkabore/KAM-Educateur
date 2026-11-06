@@ -891,6 +891,9 @@ render();
         if(pass!==$('kamAuthConfirm').value)throw Error('Les deux mots de passe ne correspondent pas.');
         const salt=b64(crypto.getRandomValues(new Uint8Array(16))),digest=await hashPassword(pass,salt);
         localStorage.setItem(key,JSON.stringify({salt,hash:digest,iterations:180000,algorithm:'PBKDF2-SHA-256'}));
+        // Le premier compte créé sur cette installation est le propriétaire : aucun code d'accès ne lui est demandé.
+        localStorage.setItem(ownerKey,'1');
+        localStorage.removeItem(accessKey);
         c=credential();if(!c||c.hash!==digest)throw Error('Impossible d’enregistrer le mot de passe sur cet appareil.');
       }else{
         const digest=await hashPassword(pass,c.salt);
